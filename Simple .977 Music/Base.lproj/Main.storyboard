@@ -1,0 +1,86 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<document type="com.apple.InterfaceBuilder3.CocoaTouch.Storyboard.XIB" version="3.0" toolsVersion="6245" systemVersion="14A361p" targetRuntime="iOS.CocoaTouch" propertyAccessControl="none" useAutolayout="YES" useTraitCollections="YES" initialViewController="1An-kb-1T5">
+    <dependencies>
+        <plugIn identifier="com.apple.InterfaceBuilder.IBCocoaTouchPlugin" version="6238"/>
+        <capability name="Constraints to layout margins" minToolsVersion="6.0"/>
+    </dependencies>
+    <scenes>
+        <!--Play Station View Controller-->
+        <scene sceneID="1XB-iN-98l">
+            <objects>
+                <viewController id="1An-kb-1T5" customClass="GG977PlayStationViewController" sceneMemberID="viewController">
+                    <layoutGuides>
+                        <viewControllerLayoutGuide type="top" id="xqL-qS-EqR"/>
+                        <viewControllerLayoutGuide type="bottom" id="gwG-gp-lLL"/>
+                    </layoutGuides>
+                    <view key="view" contentMode="scaleToFill" id="bPE-SD-Ng7">
+                        <rect key="frame" x="0.0" y="0.0" width="600" height="600"/>
+                        <autoresizingMask key="autoresizingMask" widthSizable="YES" heightSizable="YES"/>
+                        <subviews>
+                            <slider opaque="NO" contentMode="scaleToFill" contentHorizontalAlignment="center" contentVerticalAlignment="center" value="0.5" minValue="0.0" maxValue="1" minimumValueImage="volume_down" maximumValueImage="volume_up" translatesAutoresizingMaskIntoConstraints="NO" id="lrW-yZ-ouC">
+                                <rect key="frame" x="44" y="512" width="512" height="31"/>
+                                <connections>
+                                    <action selector="changeVolume:" destination="1An-kb-1T5" eventType="valueChanged" id="aYv-3R-a39"/>
+                                </connections>
+                            </slider>
+                            <label opaque="NO" userInteractionEnabled="NO" contentMode="left" horizontalHuggingPriority="251" verticalHuggingPriority="251" text="Press play button to listen" textAlignment="center" lineBreakMode="tailTruncation" baselineAdjustment="alignBaselines" adjustsFontSizeToFit="NO" translatesAutoresizingMaskIntoConstraints="NO" id="9zv-Re-rjj">
+                                <rect key="frame" x="16" y="483" width="568" height="20.5"/>
+                                <fontDescription key="fontDescription" type="system" pointSize="17"/>
+                                <color key="textColor" cocoaTouchSystemColor="darkTextColor"/>
+                                <nil key="highlightedColor"/>
+                            </label>
+                            <activityIndicatorView hidden="YES" opaque="NO" contentMode="scaleToFill" horizontalHuggingPriority="750" verticalHuggingPriority="750" hidesWhenStopped="YES" style="gray" translatesAutoresizingMaskIntoConstraints="NO" id="kTV-t7-5Gh">
+                                <rect key="frame" x="290" y="290" width="20" height="20"/>
+                            </activityIndicatorView>
+                            <button opaque="NO" contentMode="scaleToFill" contentHorizontalAlignment="center" contentVerticalAlignment="center" buttonType="detailDisclosure" lineBreakMode="middleTruncation" translatesAutoresizingMaskIntoConstraints="NO" id="hSD-s0-mKA">
+                                <rect key="frame" x="562" y="516" width="22" height="22"/>
+                                <state key="normal">
+                                    <color key="titleShadowColor" white="0.5" alpha="1" colorSpace="calibratedWhite"/>
+                                </state>
+                            </button>
+                            <button opaque="NO" contentMode="scaleToFill" contentHorizontalAlignment="center" contentVerticalAlignment="center" lineBreakMode="middleTruncation" translatesAutoresizingMaskIntoConstraints="NO" id="WRl-td-K3M">
+                                <rect key="frame" x="16" y="516" width="22" height="22"/>
+                                <state key="normal" image="play">
+                                    <color key="titleShadowColor" white="0.5" alpha="1" colorSpace="calibratedWhite"/>
+                                </state>
+                                <connections>
+                                    <action selector="playPause:" destination="1An-kb-1T5" eventType="touchUpInside" id="ChO-pp-lUM"/>
+                                </connections>
+                            </button>
+                        </subviews>
+                        <color key="backgroundColor" white="1" alpha="1" colorSpace="calibratedWhite"/>
+                        <constraints>
+                            <constraint firstItem="WRl-td-K3M" firstAttribute="leading" secondItem="bPE-SD-Ng7" secondAttribute="leadingMargin" id="0QT-bY-yIS"/>
+                            <constraint firstItem="lrW-yZ-ouC" firstAttribute="top" secondItem="9zv-Re-rjj" secondAttribute="bottom" constant="8" id="55S-en-Cq7"/>
+                            <constraint firstAttribute="centerX" secondItem="kTV-t7-5Gh" secondAttribute="centerX" id="8ti-F1-rq0"/>
+                            <constraint firstItem="lrW-yZ-ouC" firstAttribute="leading" secondItem="WRl-td-K3M" secondAttribute="trailing" constant="8" id="HZL-4f-wOP"/>
+                            <constraint firstItem="9zv-Re-rjj" firstAttribute="trailing" secondItem="bPE-SD-Ng7" secondAttribute="trailingMargin" id="I6N-tK-DVV"/>
+                            <constraint firstItem="9zv-Re-rjj" firstAttribute="leading" secondItem="bPE-SD-Ng7" secondAttribute="leadingMargin" id="Q2Z-t7-r9O"/>
+                            <constraint firstItem="gwG-gp-lLL" firstAttribute="top" secondItem="hSD-s0-mKA" secondAttribute="bottom" constant="18" id="Rbr-er-tGB"/>
+                            <constraint firstItem="hSD-s0-mKA" firstAttribute="leading" secondItem="lrW-yZ-ouC" secondAttribute="trailing" constant="8" id="X6Q-ZL-kpr"/>
+                            <constraint firstItem="hSD-s0-mKA" firstAttribute="trailing" secondItem="bPE-SD-Ng7" secondAttribute="trailingMargin" id="YAY-VA-OVu"/>
+                            <constraint firstItem="gwG-gp-lLL" firstAttribute="top" secondItem="lrW-yZ-ouC" secondAttribute="bottom" constant="14" id="em5-yA-wds"/>
+                            <constraint firstAttribute="centerY" secondItem="kTV-t7-5Gh" secondAttribute="centerY" id="kUJ-xD-MRf"/>
+                            <constraint firstItem="gwG-gp-lLL" firstAttribute="top" secondItem="WRl-td-K3M" secondAttribute="bottom" constant="18" id="uF3-5t-KOn"/>
+                        </constraints>
+                    </view>
+                    <toolbarItems/>
+                    <simulatedToolbarMetrics key="simulatedBottomBarMetrics"/>
+                    <connections>
+                        <outlet property="audioVolumeSlider" destination="lrW-yZ-ouC" id="RKb-9u-JAY"/>
+                        <outlet property="infoButton" destination="hSD-s0-mKA" id="zxp-UP-fPW"/>
+                        <outlet property="labelTitle" destination="9zv-Re-rjj" id="blR-S6-Vnu"/>
+                        <outlet property="playPauseButton" destination="WRl-td-K3M" id="m7y-Gl-Mot"/>
+                    </connections>
+                </viewController>
+                <placeholder placeholderIdentifier="IBFirstResponder" id="DHr-oF-77z" userLabel="First Responder" sceneMemberID="firstResponder"/>
+            </objects>
+            <point key="canvasLocation" x="464" y="789"/>
+        </scene>
+    </scenes>
+    <resources>
+        <image name="play" width="22" height="22"/>
+        <image name="volume_down" width="13" height="17"/>
+        <image name="volume_up" width="22" height="17"/>
+    </resources>
+</document>
