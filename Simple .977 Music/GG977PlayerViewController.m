@@ -9,11 +9,13 @@
 #import "GG977PlayerViewController.h"
 #import "GG977StationsViewController.h"
 
+// Переменные хранящие контекст наблюдателя
 static void *timedMetadataObserverContext = &timedMetadataObserverContext;
 static void *rateObserverContext = &rateObserverContext;
 static void *currentItemObserverContext = &currentItemObserverContext;
 static void *playerItemStatusObserverContext = &playerItemStatusObserverContext;
 
+// Переменные - заменители ручного вписывания ключей для наблюдателя
 NSString *keyTracks         = @"tracks";
 NSString *keyStatus         = @"status";
 NSString *keyRate			= @"rate";
@@ -33,32 +35,32 @@ NSString *keyTimedMetadata	= @"currentItem.timedMetadata";
 @property (weak, nonatomic) IBOutlet UILabel *trackInfo;
 @property (weak, nonatomic) IBOutlet UILabel *stationTitle;
 
-@property GG977StationsViewController *stationsController;
+@property GG977StationsViewController *stationsController;  // Ссылка на форму с списом станций, чтобы знать какую выбрал пользователь
 
 @end
 
 @implementation GG977PlayerViewController
 
+// Когда появляется форма с проигрывателем, мы должны узнать выбрал ли пользователь новую станцию и выбрал ли вообще
 - (void)viewDidAppear:(BOOL)animated
 {
     if (self.stationInfo != self.stationsController.selectedStation) {
         self.stationInfo = self.stationsController.selectedStation;
+        
         self.stationTitle.text = self.stationInfo.title;
+        self.trackInfo.text = @"Connecting...";
+        self.artistInfo.text = @"";
 
-        /*
-         Create an asset for inspection of a resource referenced by a given URL.
-         Load the values for the asset keys "tracks", "playable".
-         */
+        // Создаем asset для заданного url. Загружаем значения для ключей "tracks", "playable".
         AVURLAsset *asset = [AVURLAsset URLAssetWithURL:self.stationInfo.url options:nil];
         
         NSArray *requestedKeys = @[keyTracks, keyPlayable];
         
-        /* Tells the asset to load the values of any of the specified keys that are not already loaded. */
+        // Загружаем ключи, которые еще не были загруженны.
         [asset loadValuesAsynchronouslyForKeys:requestedKeys completionHandler:
          ^{
              dispatch_async( dispatch_get_main_queue(),
                             ^{
-                                /* IMPORTANT: Must dispatch to main queue in order to operate on the AVPlayer and AVPlayerItem. */
                                 [self prepareToPlayAsset:asset withKeys:requestedKeys];
                             });
          }];
@@ -68,6 +70,7 @@ NSString *keyTimedMetadata	= @"currentItem.timedMetadata";
 - (void)viewDidLoad {
     [super viewDidLoad];
     
+    // При первом запуске получаем ссылку на форму с станциями и дисейблим кнопки, т.к. еще нечего проигрывать
     UINavigationController *navController = (UINavigationController *)self.tabBarController.viewControllers[0];
     self.stationsController = (GG977StationsViewController *)navController.topViewController;
     [self disablePlayerButtons];
@@ -89,7 +92,7 @@ NSString *keyTimedMetadata	= @"currentItem.timedMetadata";
 
 - (void)syncPlayPauseButton
 {
-    NSLog(@"syncPlayPauseButton");
+    // В зависимости от состояния отображаем ту или иную картинку для кнопки
     UIImage *image = [[UIImage imageNamed: [self isPlaying] ? @"pause" : @"play"] imageWithRenderingMode:UIImageRenderingModeAlwaysTemplate];
     [self.playPauseButton setImage: image forState:UIControlStateNormal];
 }
@@ -112,17 +115,7 @@ NSString *keyTimedMetadata	= @"currentItem.timedMetadata";
 
 - (IBAction)playPause:(id)sender
 {
-    [self isPlaying] ? [self pause:sender] : [self play:sender];
-}
-
-- (IBAction)play:(id)sender
-{
-    [self.player play];
-}
-
-- (IBAction)pause:(id)sender
-{
-    [self.player pause];
+    [self isPlaying] ? [self.player pause] : [self.player play];
 }
 
 - (IBAction)changeVolume:(id)sender
@@ -132,7 +125,8 @@ NSString *keyTimedMetadata	= @"currentItem.timedMetadata";
 
 #pragma mark - Player Notifications
 
-/* Called when the player item has played to its end time. */
+// Called when the player item has played to its end time.
+// Не используется так как у стрима нет конца
 - (void) playerItemDidReachEnd:(NSNotification*) notification
 {
     NSLog(@"playerItemDidReachEnd");
@@ -140,56 +134,18 @@ NSString *keyTimedMetadata	= @"currentItem.timedMetadata";
 
 #pragma mark - Timed metadata
 
+// Обрабатывает метаданные
 - (void)handleTimedMetadata:(AVMetadataItem*)timedMetadata
 {
-    NSArray *array = [[timedMetadata.value description] componentsSeparatedByString:@" - "];
-    self.artistInfo.text = array[0];
-    self.trackInfo.text = array[1];
-    
-//    NSLog(@"handleTimedMetadata");
-
-    /* We expect the content to contain plists encoded as timed metadata. AVPlayer turns these into NSDictionaries. */
-//    if ([(NSString *)[timedMetadata key] isEqualToString:AVMetadataID3MetadataKeyGeneralEncapsulatedObject])
-//    {
-//        if ([[timedMetadata value] isKindOfClass:[NSDictionary class]])
-//        {
-//            NSDictionary *propertyList = (NSDictionary *)[timedMetadata value];
-//            
-//            /* Metadata payload could be the list of ads. */
-//            NSArray *newAdList = [propertyList objectForKey:@"ad-list"];
-//            if (newAdList != nil)
-//            {
-//                [self updateAdList:newAdList];
-//                NSLog(@"ad-list is %@", newAdList);
-//            }
-//            
-//            /* Or it might be an ad record. */
-//            NSString *adURL = [propertyList objectForKey:@"url"];
-//            if (adURL != nil)
-//            {
-//                if ([adURL isEqualToString:@""])
-//                {
-//                    /* Ad is not playing, so clear text. */
-//                    self.isPlayingAdText.text = @"";
-//                    
-//                    [self enablePlayerButtons];
-//                    [self enableScrubber]; /* Enable seeking for main content. */
-//                    
-//                    NSLog(@"enabling seek at %g", CMTimeGetSeconds([player currentTime]));
-//                }
-//                else
-//                {
-//                    /* Display text indicating that an Ad is now playing. */
-//                    self.isPlayingAdText.text = @"< Ad now playing, seeking is disabled on the movie controller... >";
-//                    
-//                    [self disablePlayerButtons];
-//                    [self disableScrubber]; 	/* Disable seeking for ad content. */
-//                    
-//                    NSLog(@"disabling seek at %g", CMTimeGetSeconds([self.player currentTime]));
-//                }
-//            }
-//        }
-//    }
+    if ([timedMetadata.commonKey isEqualToString:@"title"]) {
+        // Здесь не совсем универсальная ситуация, поскольку разыне станцие по разному разделяют артиста и название трека
+        NSArray *array = [[timedMetadata.value description] componentsSeparatedByString:@" - "];
+        if (array.count > 1) {
+            self.artistInfo.text = array[0];
+            self.trackInfo.text = array[1];
+        } else
+            self.trackInfo.text = array[0];
+    }
 }
 
 #pragma mark -
@@ -209,7 +165,6 @@ NSString *keyTimedMetadata	= @"currentItem.timedMetadata";
 {
     [self disablePlayerButtons];
     
-    /* Display the error. */
     UIAlertView *alertView = [[UIAlertView alloc] initWithTitle:[error localizedDescription]
                                                         message:[error localizedFailureReason]
                                                        delegate:nil
@@ -228,7 +183,7 @@ NSString *keyTimedMetadata	= @"currentItem.timedMetadata";
 - (void)prepareToPlayAsset:(AVURLAsset *)asset withKeys:(NSArray *)requestedKeys
 {
     NSLog(@"prepareToPlayAsset");
-    /* Make sure that the value of each key has loaded successfully. */
+    // Убеждаемся, что значение каждого ключа успешно загруженно
     for (NSString *thisKey in requestedKeys)
     {
         NSError *error = nil;
@@ -240,44 +195,37 @@ NSString *keyTimedMetadata	= @"currentItem.timedMetadata";
         }
     }
     
-    /* Use the AVAsset playable property to detect whether the asset can be played. */
+    // Проверяем может ли asset проигрываться.
     if (!asset.playable)
     {
-        /* Generate an error describing the failure. */
         NSString *localizedDescription = NSLocalizedString(@"Item cannot be played", @"Item cannot be played description");
         NSString *localizedFailureReason = NSLocalizedString(@"The assets tracks were loaded, but could not be made playable.", @"Item cannot be played failure reason");
         NSDictionary *errorDict = [NSDictionary dictionaryWithObjectsAndKeys:
                                    localizedDescription, NSLocalizedDescriptionKey,
                                    localizedFailureReason, NSLocalizedFailureReasonErrorKey,
                                    nil];
-        NSError *assetCannotBePlayedError = [NSError errorWithDomain:@"StitchedStreamPlayer" code:0 userInfo:errorDict];
+        NSError *assetCannotBePlayedError = [NSError errorWithDomain:@"977Music" code:0 userInfo:errorDict];
         
-        /* Display the error to the user. */
         [self assetFailedToPrepareForPlayback:assetCannotBePlayedError];
         
         return;
     }
     
-    /* At this point we're ready to set up for playback of the asset. */
-    
     [self enablePlayerButtons];
     
-    /* Stop observing our prior AVPlayerItem, if we have one. */
+    /* Если у нас уже был AVPlayerItem, то удаляем его обсервер. */
     if (self.playerItem)
     {
-        /* Remove existing player item key value observers and notifications. */
-        
         [self.playerItem removeObserver:self forKeyPath:keyStatus];
         
-        [[NSNotificationCenter defaultCenter] removeObserver:self
-                                                        name:AVPlayerItemDidPlayToEndTimeNotification
-                                                      object:self.playerItem];
+//        [[NSNotificationCenter defaultCenter] removeObserver:self
+//                                                        name:AVPlayerItemDidPlayToEndTimeNotification
+//                                                      object:self.playerItem];
     }
     
-    /* Create a new instance of AVPlayerItem from the now successfully loaded AVAsset. */
+    // Создаем новый playerItem
     self.playerItem = [AVPlayerItem playerItemWithAsset:asset];
     
-    /* Observe the player item "status" key to determine when it is ready to play. */
     [self.playerItem addObserver:self
                       forKeyPath:keyStatus
                          options:NSKeyValueObservingOptionInitial | NSKeyValueObservingOptionNew
@@ -291,39 +239,33 @@ NSString *keyTimedMetadata	= @"currentItem.timedMetadata";
 //                                               object:self.playerItem];
     
     
-    /* Create new player, if we don't already have one. */
+    // Создаем нового player, если еще этого не делали
     if (![self player])
     {
-        /* Get a new AVPlayer initialized to play the specified player item. */
         [self setPlayer:[AVPlayer playerWithPlayerItem:self.playerItem]];
         
-        /* Observe the AVPlayer "currentItem" property to find out when any
-         AVPlayer replaceCurrentItemWithPlayerItem: replacement will/did
-         occur.*/
+        // Для отслеживания исзменения текущего playerItem
         [self.player addObserver:self
                       forKeyPath:keyCurrentItem
                          options:NSKeyValueObservingOptionInitial | NSKeyValueObservingOptionNew
                          context:currentItemObserverContext];
         
-        /* A 'currentItem.timedMetadata' property observer to parse the media stream timed metadata. */
+        // Свойство 'currentItem.timedMetadata' для слежения за изменениями metadata
         [self.player addObserver:self
                       forKeyPath:keyTimedMetadata
                          options:0
                          context:timedMetadataObserverContext];
         
-        /* Observe the AVPlayer "rate" property to update the scrubber control. */
+#warning посмотреть еще свойства
+        // Свойство AVPlayer "rate", чтобы отслеживать запуск и останов проигрывания
         [self.player addObserver:self
                       forKeyPath:keyRate
                          options:NSKeyValueObservingOptionInitial | NSKeyValueObservingOptionNew
                          context:rateObserverContext];
     }
     
-    /* Make our new AVPlayerItem the AVPlayer's current item. */
     if (self.player.currentItem != self.playerItem)
     {
-        /* Replace the player item with a new player item. The item replacement occurs
-         asynchronously; observe the currentItem property to find out when the
-         replacement will/did occur*/
         [[self player] replaceCurrentItemWithPlayerItem:self.playerItem];
         
         NSLog(@"sync - self.player.currentItem != self.playerItem");
@@ -341,75 +283,59 @@ NSString *keyTimedMetadata	= @"currentItem.timedMetadata";
                         change:(NSDictionary*)change
                        context:(void*)context
 {
-    /* AVPlayerItem "status" property value observer. */
+    // AVPlayerItem "status"
     if (context == playerItemStatusObserverContext)
     {
-//        NSLog(@"sync - playerItemStatusObserverContext");
-//        [self syncPlayPauseButton];
         
         AVPlayerStatus status = [[change objectForKey:NSKeyValueChangeNewKey] integerValue];
         switch (status)
         {
-                /* Indicates that the status of the player is not yet known because
-                 it has not tried to load new media resources for playback */
+            // Указывает на то, что player еще не имеет конкретного статуса, т.к. он еще не пробовал загрузить медиа данные
             case AVPlayerStatusUnknown:
             {
-                NSLog(@"AVPlayerStatusUnknown");
                 [self disablePlayerButtons];
             }
                 break;
-
+            // AVPlayerItem готов к проигрыванию
             case AVPlayerStatusReadyToPlay:
             {
-                NSLog(@"AVPlayerStatusReadyToPlay");
-                /* Once the AVPlayerItem becomes ready to play, i.e.
-                 [playerItem status] == AVPlayerItemStatusReadyToPlay,
-                 its duration can be fetched from the item. */
                 [self enablePlayerButtons];
                 self.audioVolumeSlider.value = self.player.volume;
+                self.trackInfo.text = @"Getting metadata...";
+                [self.player play];
                 
             }
                 break;
                 
             case AVPlayerStatusFailed:
             {
-                NSLog(@"AVPlayerStatusFailed");
                 AVPlayerItem *thePlayerItem = (AVPlayerItem *)object;
                 [self assetFailedToPrepareForPlayback:thePlayerItem.error];
             }
                 break;
         }
     }
-    /* AVPlayer "rate" property value observer. */
+    // AVPlayer "rate"
     else if (context == rateObserverContext)
     {
-        NSLog(@"sync - rateObserverContext");
         [self syncPlayPauseButton];
     }
-    /* AVPlayer "currentItem" property observer.
-     Called when the AVPlayer replaceCurrentItemWithPlayerItem:
-     replacement will/did occur. */
+    // AVPlayer "currentItem". Срабатывает когда AVPlayer вызывает replaceCurrentItemWithPlayerItem:
     else if (context == currentItemObserverContext)
     {
-        NSLog(@"currentItemObserverContext");
         AVPlayerItem *newPlayerItem = [change objectForKey:NSKeyValueChangeNewKey];
         
-        /* New player item null? */
+        // Если вдруг нечем проигрывать, то делаем кнопки неактивными
         if (newPlayerItem == (id)[NSNull null])
         {
-            NSLog(@"New player item null?");
             [self disablePlayerButtons];
             
-//            self.isPlayingAdText.text = @"";
         }
-        else /* Replacement of player currentItem has occurred */
+        else // А если есть чем проигрывать, то нам нечего тут делать пока что
         {
-            NSLog(@"Replacement of player currentItem has occurred");
-//            [self syncPlayPauseButton];
         }
     }
-    /* Observe the AVPlayer "currentItem.timedMetadata" property to parse the media stream
-     timed metadata. */
+    // Обрабатываем изменения метаданных
     else if (context == timedMetadataObserverContext)
     {
         NSArray* array = self.player.currentItem.timedMetadata;
@@ -420,7 +346,6 @@ NSString *keyTimedMetadata	= @"currentItem.timedMetadata";
     }
     else
     {
-        NSLog(@"super observer");
         [super observeValueForKeyPath:path ofObject:object change:change context:context];
     }
     return;

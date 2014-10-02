@@ -58,7 +58,6 @@
         [stations addObject:[[GG977StationInfo alloc] initWithTitle:key url:[NSURL URLWithString:self.stations[key]]]];
     }
     
-#warning надо ли изменяемый в неизменяемый превращать?
     return [NSArray arrayWithArray:stations];
 }
 

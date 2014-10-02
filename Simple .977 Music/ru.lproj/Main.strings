@@ -1,0 +1,18 @@
+
+/* Class = "IBUILabel"; text = "Title"; ObjectID = "3T6-hh-WMA"; */
+"3T6-hh-WMA.text" = "Title";
+
+/* Class = "IBUINavigationItem"; title = ".977 Music"; ObjectID = "FTD-I0-deM"; */
+"FTD-I0-deM.title" = ".977 Music";
+
+/* Class = "IBUINavigationItem"; title = ".977 Music"; ObjectID = "Igk-6T-K5V"; */
+"Igk-6T-K5V.title" = ".977 Music";
+
+/* Class = "IBUITabBarItem"; title = "All Stations"; ObjectID = "Xfa-4u-Uys"; */
+"Xfa-4u-Uys.title" = "Все станции";
+
+/* Class = "IBUITabBarItem"; title = "Now Playing"; ObjectID = "wLX-WN-kLK"; */
+"wLX-WN-kLK.title" = "Сейас играет";
+
+/* Class = "IBUILabel"; text = "No station is selected"; ObjectID = "wsP-R4-Ynk"; */
+"wsP-R4-Ynk.text" = "Ниодна станция не выбрана";

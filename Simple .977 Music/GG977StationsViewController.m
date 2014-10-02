@@ -7,13 +7,12 @@
 //
 
 #import "GG977StationsViewController.h"
-//#import "GG977PlayerViewController.h"
 #import "GG977StationsCollection.h"
 
 @interface GG977StationsViewController ()
 
 @property (strong, nonatomic) NSArray *itemsToDisplay;
-@property GG977StationsCollection *stationsCollection;
+@property GG977StationsCollection *stationsCollection;  // Экземпляр класса, предоставляющего досутп к списку станций из ресурсов
 
 @end
 
@@ -21,7 +20,7 @@
 
 -(void)viewWillDisappear:(BOOL)animated{
     [super viewWillAppear:animated];
-    // Если свойство задано как YES, то очищаем выделения строк в таблице при ее отображении
+    // Если свойство задано как YES, то очищаем выделения строк в таблице при ее исчезновении
     if (self.clearsSelectionOnViewWillAppear) {
         [self.tableView deselectRowAtIndexPath:self.tableView.indexPathForSelectedRow animated:YES];
     }
@@ -85,13 +84,12 @@
 
 - (void)tableView:(UITableView *)tableView didSelectRowAtIndexPath:(NSIndexPath *)indexPath
 {
-//    self.tabBarController.selectedIndex = 1;
+    // С красивой анимацией переходим к прослушиванию станции
     self.selectedStation = self.itemsToDisplay[indexPath.row];
     
     UIView * fromView = self.tabBarController.selectedViewController.view;
     UIView * toView = [[self.tabBarController.viewControllers objectAtIndex:1] view];
     
-    // Transition using a page curl.
     [UIView transitionFromView:fromView
                         toView:toView
                       duration:0.5

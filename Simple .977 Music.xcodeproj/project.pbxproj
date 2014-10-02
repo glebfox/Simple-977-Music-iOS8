@@ -17,6 +17,7 @@
 		7E86C41919DC205A00BCB729 /* GG977StationInfo.m in Sources */ = {isa = PBXBuildFile; fileRef = 7E86C41819DC205A00BCB729 /* GG977StationInfo.m */; };
 		7E86C41B19DD17BA00BCB729 /* Stations.plist in Resources */ = {isa = PBXBuildFile; fileRef = 7E86C41A19DD17BA00BCB729 /* Stations.plist */; };
 		7E86C41F19DD1A8300BCB729 /* GG977StationsCollection.m in Sources */ = {isa = PBXBuildFile; fileRef = 7E86C41E19DD1A8300BCB729 /* GG977StationsCollection.m */; };
+		7E86C42419DD855800BCB729 /* Localizable.strings in Resources */ = {isa = PBXBuildFile; fileRef = 7E86C42619DD855800BCB729 /* Localizable.strings */; };
 		7E9752A719DA8ABE00B215DF /* GG977PlayerViewController.m in Sources */ = {isa = PBXBuildFile; fileRef = 7E9752A619DA8ABE00B215DF /* GG977PlayerViewController.m */; };
 /* End PBXBuildFile section */
 
@@ -50,6 +51,9 @@
 		7E86C41A19DD17BA00BCB729 /* Stations.plist */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.plist.xml; path = Stations.plist; sourceTree = "<group>"; };
 		7E86C41D19DD1A8300BCB729 /* GG977StationsCollection.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = GG977StationsCollection.h; sourceTree = "<group>"; };
 		7E86C41E19DD1A8300BCB729 /* GG977StationsCollection.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = GG977StationsCollection.m; sourceTree = "<group>"; };
+		7E86C42319DD851C00BCB729 /* ru */ = {isa = PBXFileReference; lastKnownFileType = text.plist.strings; name = ru; path = ru.lproj/Main.strings; sourceTree = "<group>"; };
+		7E86C42519DD855800BCB729 /* ru */ = {isa = PBXFileReference; lastKnownFileType = text.plist.strings; name = ru; path = ru.lproj/Localizable.strings; sourceTree = "<group>"; };
+		7E86C42719DD855900BCB729 /* Base */ = {isa = PBXFileReference; lastKnownFileType = text.plist.strings; name = Base; path = Base.lproj/Localizable.strings; sourceTree = "<group>"; };
 		7E9752A519DA8ABE00B215DF /* GG977PlayerViewController.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = GG977PlayerViewController.h; sourceTree = "<group>"; };
 		7E9752A619DA8ABE00B215DF /* GG977PlayerViewController.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = GG977PlayerViewController.m; sourceTree = "<group>"; };
 /* End PBXFileReference section */
@@ -140,6 +144,7 @@
 		7E057F1719DA8041004F5304 /* Model */ = {
 			isa = PBXGroup;
 			children = (
+				7E86C42619DD855800BCB729 /* Localizable.strings */,
 				7E86C41C19DD199600BCB729 /* Stations */,
 				7E86C41719DC205A00BCB729 /* GG977StationInfo.h */,
 				7E86C41819DC205A00BCB729 /* GG977StationInfo.m */,
@@ -259,6 +264,7 @@
 			isa = PBXResourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				7E86C42419DD855800BCB729 /* Localizable.strings in Resources */,
 				7E057EFC19DA7FCF004F5304 /* Main.storyboard in Resources */,
 				7E86C41B19DD17BA00BCB729 /* Stations.plist in Resources */,
 				7E057F0119DA7FCF004F5304 /* LaunchScreen.xib in Resources */,
@@ -312,6 +318,7 @@
 			isa = PBXVariantGroup;
 			children = (
 				7E057EFB19DA7FCF004F5304 /* Base */,
+				7E86C42319DD851C00BCB729 /* ru */,
 			);
 			name = Main.storyboard;
 			sourceTree = "<group>";
@@ -323,6 +330,15 @@
 				7E057F1B19DA811C004F5304 /* ru */,
 			);
 			name = LaunchScreen.xib;
+			sourceTree = "<group>";
+		};
+		7E86C42619DD855800BCB729 /* Localizable.strings */ = {
+			isa = PBXVariantGroup;
+			children = (
+				7E86C42519DD855800BCB729 /* ru */,
+				7E86C42719DD855900BCB729 /* Base */,
+			);
+			name = Localizable.strings;
 			sourceTree = "<group>";
 		};
 /* End PBXVariantGroup section */

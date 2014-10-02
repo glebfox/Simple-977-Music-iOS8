@@ -16,5 +16,4 @@
 
 @property GG977StationInfo *stationInfo;
 
-
 @end

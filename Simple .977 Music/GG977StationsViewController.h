@@ -15,6 +15,6 @@
 
 @property(nonatomic) BOOL clearsSelectionOnViewWillAppear NS_AVAILABLE_IOS(3_2); // defaults to YES. If YES, any selection is cleared in viewWillAppear:
 
-@property GG977StationInfo *selectedStation;
+@property GG977StationInfo *selectedStation;        // Ссылка на выбранную станцию в таблице
 
 @end
