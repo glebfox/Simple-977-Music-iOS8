@@ -6,14 +6,14 @@
 //  Copyright (c) 2014 Gleb Gorelov. All rights reserved.
 //
 
-#import "GG977PlayStationViewController.h"
+#import "GG977PlayerViewController.h"
 
 static void *timedMetadataObserverContext = &timedMetadataObserverContext;
 static void *rateObserverContext = &rateObserverContext;
 static void *currentItemObserverContext = &currentItemObserverContext;
 static void *playerItemStatusObserverContext = &playerItemStatusObserverContext;
 
-@interface GG977PlayStationViewController ()
+@interface GG977PlayerViewController ()
 
 @property (retain) AVPlayer *player;
 @property (retain) AVPlayerItem *playerItem;
@@ -21,27 +21,29 @@ static void *playerItemStatusObserverContext = &playerItemStatusObserverContext;
 @property (weak, nonatomic) IBOutlet UIButton *playPauseButton;
 @property (weak, nonatomic) IBOutlet UISlider *audioVolumeSlider;
 @property (weak, nonatomic) IBOutlet UIButton *infoButton;
-@property (weak, nonatomic) IBOutlet UILabel *labelTitle;
+@property (weak, nonatomic) IBOutlet UILabel *artistInfo;
+@property (weak, nonatomic) IBOutlet UILabel *trackInfo;
+@property (weak, nonatomic) IBOutlet UILabel *stantionTitle;
 
 @end
 
-@implementation GG977PlayStationViewController
+@implementation GG977PlayerViewController
 
 - (void)viewDidLoad {
     [super viewDidLoad];
     // Do any additional setup after loading the view.
     
-    self.stationUrl = [NSURL URLWithString:@"http://www.977music.com/itunes/alternative.pls"];
+    self.stationInfo = [[GG977StationInfo alloc] initWithTitle:@"Alternative" url:[NSURL URLWithString:@"http://www.977music.com/itunes/alternative.pls"]];
     
-    self.playerItem = [AVPlayerItem playerItemWithURL:self.stationUrl];
+    self.stantionTitle.text = self.stationInfo.title;
+    
+    self.playerItem = [AVPlayerItem playerItemWithURL:self.stationInfo.url];
     [self.playerItem addObserver:self forKeyPath:@"status" options:0 context:playerItemStatusObserverContext];
     
     self.player = [AVPlayer playerWithPlayerItem:self.playerItem];
     
     [self.player addObserver:self forKeyPath:@"currentItem.timedMetadata" options:0 context:timedMetadataObserverContext];
-    
     [self.player addObserver:self forKeyPath:@"currentItem" options:0 context:currentItemObserverContext];
-    
     [self.player addObserver:self forKeyPath:@"rate" options:0 context:rateObserverContext];
     
     self.audioVolumeSlider.value = self.player.volume;
@@ -125,7 +127,10 @@ static void *playerItemStatusObserverContext = &playerItemStatusObserverContext;
 
 - (void)handleTimedMetadata:(AVMetadataItem*)timedMetadata
 {
-    self.labelTitle.text = [timedMetadata.value description];
+    NSArray *array = [[timedMetadata.value description] componentsSeparatedByString:@" - "];
+    self.artistInfo.text = array[0];
+    self.trackInfo.text = array[1];
+    
 //    NSLog(@"handleTimedMetadata");
 
     /* We expect the content to contain plists encoded as timed metadata. AVPlayer turns these into NSDictionaries. */
@@ -276,7 +281,7 @@ static void *playerItemStatusObserverContext = &playerItemStatusObserverContext;
      timed metadata. */
     else if (context == timedMetadataObserverContext)
     {
-        NSArray* array = [[self.player currentItem] timedMetadata];
+        NSArray* array = self.player.currentItem.timedMetadata;
         for (AVMetadataItem *metadataItem in array)
         {
             [self handleTimedMetadata:metadataItem];

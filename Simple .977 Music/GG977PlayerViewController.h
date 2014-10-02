@@ -10,9 +10,11 @@
 #import <AVFoundation/AVFoundation.h>
 #import <CoreMedia/CoreMedia.h>
 
-@interface GG977PlayStationViewController : UIViewController
+#import "GG977StationInfo.h"
 
-@property NSURL *stationUrl;
+@interface GG977PlayerViewController : UIViewController
+
+@property GG977StationInfo *stationInfo;
 
 
 @end
