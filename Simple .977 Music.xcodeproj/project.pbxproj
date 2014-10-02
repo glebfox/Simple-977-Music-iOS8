@@ -15,6 +15,8 @@
 		7E057F0D19DA7FCF004F5304 /* Simple__977_MusicTests.m in Sources */ = {isa = PBXBuildFile; fileRef = 7E057F0C19DA7FCF004F5304 /* Simple__977_MusicTests.m */; };
 		7E86C41619DC1D8B00BCB729 /* GG977StationsViewController.m in Sources */ = {isa = PBXBuildFile; fileRef = 7E86C41519DC1D8B00BCB729 /* GG977StationsViewController.m */; };
 		7E86C41919DC205A00BCB729 /* GG977StationInfo.m in Sources */ = {isa = PBXBuildFile; fileRef = 7E86C41819DC205A00BCB729 /* GG977StationInfo.m */; };
+		7E86C41B19DD17BA00BCB729 /* Stations.plist in Resources */ = {isa = PBXBuildFile; fileRef = 7E86C41A19DD17BA00BCB729 /* Stations.plist */; };
+		7E86C41F19DD1A8300BCB729 /* GG977StationsCollection.m in Sources */ = {isa = PBXBuildFile; fileRef = 7E86C41E19DD1A8300BCB729 /* GG977StationsCollection.m */; };
 		7E9752A719DA8ABE00B215DF /* GG977PlayerViewController.m in Sources */ = {isa = PBXBuildFile; fileRef = 7E9752A619DA8ABE00B215DF /* GG977PlayerViewController.m */; };
 /* End PBXBuildFile section */
 
@@ -45,6 +47,9 @@
 		7E86C41519DC1D8B00BCB729 /* GG977StationsViewController.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = GG977StationsViewController.m; sourceTree = "<group>"; };
 		7E86C41719DC205A00BCB729 /* GG977StationInfo.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = GG977StationInfo.h; sourceTree = "<group>"; };
 		7E86C41819DC205A00BCB729 /* GG977StationInfo.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = GG977StationInfo.m; sourceTree = "<group>"; };
+		7E86C41A19DD17BA00BCB729 /* Stations.plist */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.plist.xml; path = Stations.plist; sourceTree = "<group>"; };
+		7E86C41D19DD1A8300BCB729 /* GG977StationsCollection.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = GG977StationsCollection.h; sourceTree = "<group>"; };
+		7E86C41E19DD1A8300BCB729 /* GG977StationsCollection.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = GG977StationsCollection.m; sourceTree = "<group>"; };
 		7E9752A519DA8ABE00B215DF /* GG977PlayerViewController.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = GG977PlayerViewController.h; sourceTree = "<group>"; };
 		7E9752A619DA8ABE00B215DF /* GG977PlayerViewController.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = GG977PlayerViewController.m; sourceTree = "<group>"; };
 /* End PBXFileReference section */
@@ -135,6 +140,7 @@
 		7E057F1719DA8041004F5304 /* Model */ = {
 			isa = PBXGroup;
 			children = (
+				7E86C41C19DD199600BCB729 /* Stations */,
 				7E86C41719DC205A00BCB729 /* GG977StationInfo.h */,
 				7E86C41819DC205A00BCB729 /* GG977StationInfo.m */,
 			);
@@ -160,6 +166,16 @@
 				7E86C41519DC1D8B00BCB729 /* GG977StationsViewController.m */,
 			);
 			name = Controllers;
+			sourceTree = "<group>";
+		};
+		7E86C41C19DD199600BCB729 /* Stations */ = {
+			isa = PBXGroup;
+			children = (
+				7E86C41A19DD17BA00BCB729 /* Stations.plist */,
+				7E86C41D19DD1A8300BCB729 /* GG977StationsCollection.h */,
+				7E86C41E19DD1A8300BCB729 /* GG977StationsCollection.m */,
+			);
+			name = Stations;
 			sourceTree = "<group>";
 		};
 /* End PBXGroup section */
@@ -244,6 +260,7 @@
 			buildActionMask = 2147483647;
 			files = (
 				7E057EFC19DA7FCF004F5304 /* Main.storyboard in Resources */,
+				7E86C41B19DD17BA00BCB729 /* Stations.plist in Resources */,
 				7E057F0119DA7FCF004F5304 /* LaunchScreen.xib in Resources */,
 				7E057EFE19DA7FCF004F5304 /* Images.xcassets in Resources */,
 			);
@@ -263,6 +280,7 @@
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				7E86C41F19DD1A8300BCB729 /* GG977StationsCollection.m in Sources */,
 				7E9752A719DA8ABE00B215DF /* GG977PlayerViewController.m in Sources */,
 				7E86C41619DC1D8B00BCB729 /* GG977StationsViewController.m in Sources */,
 				7E86C41919DC205A00BCB729 /* GG977StationInfo.m in Sources */,

@@ -7,17 +7,19 @@
 //
 
 #import "GG977StationsViewController.h"
-#import "GG977StationInfo.h"
+//#import "GG977PlayerViewController.h"
+#import "GG977StationsCollection.h"
 
 @interface GG977StationsViewController ()
 
-@property (strong, nonatomic) NSMutableArray *itemsToDisplay;
+@property (strong, nonatomic) NSArray *itemsToDisplay;
+@property GG977StationsCollection *stationsCollection;
 
 @end
 
 @implementation GG977StationsViewController
 
--(void)viewWillAppear:(BOOL)animated{
+-(void)viewWillDisappear:(BOOL)animated{
     [super viewWillAppear:animated];
     // Если свойство задано как YES, то очищаем выделения строк в таблице при ее отображении
     if (self.clearsSelectionOnViewWillAppear) {
@@ -43,14 +45,9 @@
 
 - (void)loadStations
 {
-    GG977StationInfo *info;
+    self.stationsCollection = [GG977StationsCollection sharedInstance];
     
-    info = [[GG977StationInfo alloc] initWithTitle:@"Alternative" url:[NSURL URLWithString:@"http://www.977music.com/itunes/alternative.pls"]];
-    [self.itemsToDisplay addObject:info];
-    
-    info = [[GG977StationInfo alloc] initWithTitle:@"Hitz" url:[NSURL URLWithString:@"http://977music.com/itunes/hitz.pls"]];
-    [self.itemsToDisplay addObject:info];
-    
+    self.itemsToDisplay = [self.stationsCollection allStations];
     [self.tableView reloadData];
 }
 
@@ -82,6 +79,28 @@
     cell.textLabel.text = [self.itemsToDisplay[indexPath.row] title];
     
     return cell;
+}
+
+#pragma mark - Table view delegate
+
+- (void)tableView:(UITableView *)tableView didSelectRowAtIndexPath:(NSIndexPath *)indexPath
+{
+//    self.tabBarController.selectedIndex = 1;
+    self.selectedStation = self.itemsToDisplay[indexPath.row];
+    
+    UIView * fromView = self.tabBarController.selectedViewController.view;
+    UIView * toView = [[self.tabBarController.viewControllers objectAtIndex:1] view];
+    
+    // Transition using a page curl.
+    [UIView transitionFromView:fromView
+                        toView:toView
+                      duration:0.5
+                       options: UIViewAnimationOptionTransitionFlipFromRight
+                    completion:^(BOOL finished) {
+                        if (finished) {
+                            self.tabBarController.selectedIndex = 1;
+                        }
+                    }];
 }
 
 

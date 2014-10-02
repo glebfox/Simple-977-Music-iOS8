@@ -7,6 +7,7 @@
 //
 
 #import <UIKit/UIKit.h>
+#import "GG977StationInfo.h"
 
 @interface GG977StationsViewController : UIViewController <UITableViewDelegate, UITableViewDataSource>
 
@@ -14,5 +15,6 @@
 
 @property(nonatomic) BOOL clearsSelectionOnViewWillAppear NS_AVAILABLE_IOS(3_2); // defaults to YES. If YES, any selection is cleared in viewWillAppear:
 
+@property GG977StationInfo *selectedStation;
 
 @end

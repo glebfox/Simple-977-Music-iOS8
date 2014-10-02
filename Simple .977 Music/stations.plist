@@ -1,0 +1,28 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<plist version="1.0">
+<dict>
+	<key>80s</key>
+	<string>http://977music.com/itunes/80s.pls</string>
+	<key>Hitz</key>
+	<string>http://977music.com/itunes/hitz.pls</string>
+	<key>Oldies</key>
+	<string>http://www.977music.com/itunes/oldies.pls</string>
+	<key>Classic Rock</key>
+	<string>http://www.977music.com/itunes/classicrock.pls</string>
+	<key>Alternative</key>
+	<string>http://www.977music.com/itunes/alternative.pls</string>
+	<key>Country</key>
+	<string>http://www.977music.com/977hicountry.pls</string>
+	<key>Smooth Jazz</key>
+	<string>http://www.977music.com/itunes/jazz.pls</string>
+	<key>Mix</key>
+	<string>http://www.977music.com/itunes/mix.pls</string>
+	<key>Jamz</key>
+	<string>http://www.977music.com/itunes/jamz.pls</string>
+	<key>Comedy</key>
+	<string>http://www.977music.com/itunes/comedy.pls</string>
+	<key>90s</key>
+	<string>http://www.977music.com/itunes/90s.pls</string>
+</dict>
+</plist>
