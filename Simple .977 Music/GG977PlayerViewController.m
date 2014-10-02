@@ -326,6 +326,7 @@ NSString *keyTimedMetadata	= @"currentItem.timedMetadata";
          replacement will/did occur*/
         [[self player] replaceCurrentItemWithPlayerItem:self.playerItem];
         
+        NSLog(@"sync - self.player.currentItem != self.playerItem");
         [self syncPlayPauseButton];
     }
 }
@@ -343,7 +344,8 @@ NSString *keyTimedMetadata	= @"currentItem.timedMetadata";
     /* AVPlayerItem "status" property value observer. */
     if (context == playerItemStatusObserverContext)
     {
-        [self syncPlayPauseButton];
+//        NSLog(@"sync - playerItemStatusObserverContext");
+//        [self syncPlayPauseButton];
         
         AVPlayerStatus status = [[change objectForKey:NSKeyValueChangeNewKey] integerValue];
         switch (status)
@@ -381,6 +383,7 @@ NSString *keyTimedMetadata	= @"currentItem.timedMetadata";
     /* AVPlayer "rate" property value observer. */
     else if (context == rateObserverContext)
     {
+        NSLog(@"sync - rateObserverContext");
         [self syncPlayPauseButton];
     }
     /* AVPlayer "currentItem" property observer.
@@ -402,7 +405,7 @@ NSString *keyTimedMetadata	= @"currentItem.timedMetadata";
         else /* Replacement of player currentItem has occurred */
         {
             NSLog(@"Replacement of player currentItem has occurred");
-            [self syncPlayPauseButton];
+//            [self syncPlayPauseButton];
         }
     }
     /* Observe the AVPlayer "currentItem.timedMetadata" property to parse the media stream
