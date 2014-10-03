@@ -240,9 +240,9 @@ NSString *keyTimedMetadata	= @"currentItem.timedMetadata";
     
     
     // Создаем нового player, если еще этого не делали
-    if (![self player])
+    if (!self.player)
     {
-        [self setPlayer:[AVPlayer playerWithPlayerItem:self.playerItem]];
+        self.player = [AVPlayer playerWithPlayerItem:self.playerItem];
         
         // Для отслеживания исзменения текущего playerItem
         [self.player addObserver:self
@@ -256,7 +256,6 @@ NSString *keyTimedMetadata	= @"currentItem.timedMetadata";
                          options:0
                          context:timedMetadataObserverContext];
         
-#warning посмотреть еще свойства
         // Свойство AVPlayer "rate", чтобы отслеживать запуск и останов проигрывания
         [self.player addObserver:self
                       forKeyPath:keyRate
@@ -266,7 +265,7 @@ NSString *keyTimedMetadata	= @"currentItem.timedMetadata";
     
     if (self.player.currentItem != self.playerItem)
     {
-        [[self player] replaceCurrentItemWithPlayerItem:self.playerItem];
+        [self.player replaceCurrentItemWithPlayerItem:self.playerItem];
         
         NSLog(@"sync - self.player.currentItem != self.playerItem");
         [self syncPlayPauseButton];
