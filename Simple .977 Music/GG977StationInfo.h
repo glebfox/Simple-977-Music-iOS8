@@ -8,7 +8,7 @@
 
 #import <Foundation/Foundation.h>
 
-@interface GG977StationInfo : NSObject
+@interface GG977StationInfo : NSObject <NSCoding>
 
 @property NSString *title;
 @property NSURL *url;

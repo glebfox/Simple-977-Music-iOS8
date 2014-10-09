@@ -35,37 +35,9 @@ NSString *keyTimedMetadata	= @"currentItem.timedMetadata";
 @property (weak, nonatomic) IBOutlet UILabel *stationTitle;
 @property (weak, nonatomic) IBOutlet MPVolumeView *volumeView;
 
-@property GG977StationsViewController *stationsController;  // Ссылка на форму с списом станций, чтобы знать какую выбрал пользователь
-
 @end
 
 @implementation GG977PlayerViewController
-
-// Когда появляется форма с проигрывателем, мы должны узнать выбрал ли пользователь новую станцию и выбрал ли вообще
-- (void)viewDidAppear:(BOOL)animated
-{
-    if (self.stationInfo != self.stationsController.selectedStation) {
-        self.stationInfo = self.stationsController.selectedStation;
-        
-        self.stationTitle.text = self.stationInfo.title;
-        self.trackInfo.text = @"Connecting...";
-        self.artistInfo.text = @"";
-
-        // Создаем asset для заданного url. Загружаем значения для ключей "tracks", "playable".
-        AVURLAsset *asset = [AVURLAsset URLAssetWithURL:self.stationInfo.url options:nil];
-        
-        NSArray *requestedKeys = @[keyTracks, keyPlayable];
-        
-        // Загружаем ключи, которые еще не были загруженны.
-        [asset loadValuesAsynchronouslyForKeys:requestedKeys completionHandler:
-         ^{
-             dispatch_async( dispatch_get_main_queue(),
-                            ^{
-                                [self prepareToPlayAsset:asset withKeys:requestedKeys];
-                            });
-         }];
-    }
-}
 
 - (void)viewDidLoad {
     [super viewDidLoad];
@@ -81,10 +53,12 @@ NSString *keyTimedMetadata	= @"currentItem.timedMetadata";
     [volumeViewSlider setMinimumValueImage:[UIImage imageNamed:@"volume_down.png"]];
     [volumeViewSlider setMaximumValueImage:[UIImage imageNamed:@"volume_up.png"]];
     
-    // При первом запуске получаем ссылку на форму с станциями и дисейблим кнопки, т.к. еще нечего проигрывать
-    UINavigationController *navController = (UINavigationController *)self.tabBarController.viewControllers[0];
-    self.stationsController = (GG977StationsViewController *)navController.topViewController;
     [self disablePlayerButtons];
+    
+    if (self.stationInfo != nil) {
+        self.stationTitle.text = self.stationInfo.title;
+        self.trackInfo.text = @"Connecting...";
+    }
 }
 
 - (void)didReceiveMemoryWarning {
@@ -93,6 +67,32 @@ NSString *keyTimedMetadata	= @"currentItem.timedMetadata";
 }
 
 #pragma mark - Player
+
+- (void)setStationInfo:(GG977StationInfo *)stationInfo
+{
+    if (_stationInfo != stationInfo) {
+    
+        _stationInfo = stationInfo;
+    
+        self.stationTitle.text = _stationInfo.title;
+        self.trackInfo.text = @"Connecting...";
+        self.artistInfo.text = @"";
+    
+        // Создаем asset для заданного url. Загружаем значения для ключей "tracks", "playable".
+        AVURLAsset *asset = [AVURLAsset URLAssetWithURL:_stationInfo.url options:nil];
+    
+        NSArray *requestedKeys = @[keyTracks, keyPlayable];
+    
+        // Загружаем ключи, которые еще не были загруженны.
+        [asset loadValuesAsynchronouslyForKeys:requestedKeys completionHandler:
+         ^{
+             dispatch_async( dispatch_get_main_queue(),
+                        ^{
+                            [self prepareToPlayAsset:asset withKeys:requestedKeys];
+                        });
+         }];
+    }
+}
 
 - (BOOL)isPlaying
 {

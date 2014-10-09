@@ -7,6 +7,8 @@
 //
 
 #import "AppDelegate.h"
+#import "GG977StationsCollection.h"
+#import "GG977StationsViewController.h"
 
 @interface AppDelegate ()
 
@@ -17,6 +19,23 @@
 
 - (BOOL)application:(UIApplication *)application didFinishLaunchingWithOptions:(NSDictionary *)launchOptions {
     // Override point for customization after application launch.
+    
+    UIStoryboard *mainstoryboard = [UIStoryboard storyboardWithName:@"Main" bundle:nil];
+    UIViewController *root = mainstoryboard.instantiateInitialViewController;
+    
+    if ([root class] == [UITabBarController class]) {
+        UITabBarController *tabBar = (UITabBarController *)root;
+        UIViewController *controller = [tabBar.viewControllers objectAtIndex:0];
+        if ([controller class] == [UINavigationController class]) {
+            UINavigationController *navController = (UINavigationController *)controller;
+            controller = navController.topViewController;
+            if ([controller class] == [GG977StationsViewController class]) {
+                GG977StationsViewController *master = (GG977StationsViewController *)controller;
+                [master setItemsToDisplay:[[GG977StationsCollection sharedInstance] allStations]];
+            }
+        }
+    }
+    
     return YES;
 }
 

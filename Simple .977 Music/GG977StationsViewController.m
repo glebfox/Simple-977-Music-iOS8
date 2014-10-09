@@ -8,46 +8,33 @@
 
 #import "GG977StationsViewController.h"
 #import "GG977StationsCollection.h"
+#import "GG977PlayerViewController.h"
 
 @interface GG977StationsViewController ()
 
-@property (strong, nonatomic) NSArray *itemsToDisplay;
-@property GG977StationsCollection *stationsCollection;  // Экземпляр класса, предоставляющего досутп к списку станций из ресурсов
+@property (weak, nonatomic) IBOutlet UITableView *tableView;
 
 @end
 
 @implementation GG977StationsViewController
 
--(void)viewWillDisappear:(BOOL)animated{
-    [super viewWillAppear:animated];
-    // Если свойство задано как YES, то очищаем выделения строк в таблице при ее исчезновении
-    if (self.clearsSelectionOnViewWillAppear) {
-        [self.tableView deselectRowAtIndexPath:self.tableView.indexPathForSelectedRow animated:YES];
-    }
-}
+//-(void)viewWillDisappear:(BOOL)animated{
+//    [super viewWillAppear:animated];
+//    // Снимаем выделение с ячейки
+//    if ([self.tableView indexPathForSelectedRow]) {
+//        [self.tableView deselectRowAtIndexPath:self.tableView.indexPathForSelectedRow animated:YES];
+//    }
+//}
 
 - (void)viewDidLoad {
     [super viewDidLoad];
-    // Do any additional setup after loading the view.
     
-    // При возвращении к таблице долдны очищаться выделения
-    self.clearsSelectionOnViewWillAppear = YES;
-    
-    self.itemsToDisplay = [NSMutableArray new];
-    [self loadStations];
+    self.itemsToDisplay = [[GG977StationsCollection sharedInstance] allStations];
 }
 
 - (void)didReceiveMemoryWarning {
     [super didReceiveMemoryWarning];
     // Dispose of any resources that can be recreated.
-}
-
-- (void)loadStations
-{
-    self.stationsCollection = [GG977StationsCollection sharedInstance];
-    
-    self.itemsToDisplay = [self.stationsCollection allStations];
-    [self.tableView reloadData];
 }
 
 #pragma mark - Table view data source
@@ -69,11 +56,6 @@
     static NSString *CellIdentider = @"Cell";
     UITableViewCell *cell = [tableView dequeueReusableCellWithIdentifier:CellIdentider forIndexPath:indexPath];
     
-    if (cell == nil) {
-        cell = [[UITableViewCell alloc] initWithStyle:UITableViewCellStyleSubtitle reuseIdentifier:CellIdentider];
-        cell.accessoryType = UITableViewCellAccessoryDisclosureIndicator;
-    }
-    
     // Configure the cell...
     cell.textLabel.text = [self.itemsToDisplay[indexPath.row] title];
     
@@ -84,11 +66,19 @@
 
 - (void)tableView:(UITableView *)tableView didSelectRowAtIndexPath:(NSIndexPath *)indexPath
 {
-    // С красивой анимацией переходим к прослушиванию станции
-    self.selectedStation = self.itemsToDisplay[indexPath.row];
-    
+    [tableView deselectRowAtIndexPath:indexPath animated:NO];
     UIView * fromView = self.tabBarController.selectedViewController.view;
     UIView * toView = [[self.tabBarController.viewControllers objectAtIndex:1] view];
+    
+    UIViewController *controller = [self.tabBarController.viewControllers objectAtIndex:1];
+    if ([controller class] == [UINavigationController class]) {
+        UINavigationController *navController = (UINavigationController *)controller;
+        controller = navController.topViewController;
+        if ([controller class] == [GG977PlayerViewController class]) {
+            GG977PlayerViewController *player = (GG977PlayerViewController *)controller;
+            [player setStationInfo:self.itemsToDisplay[indexPath.row]];
+        }
+    }
     
     [UIView transitionFromView:fromView
                         toView:toView

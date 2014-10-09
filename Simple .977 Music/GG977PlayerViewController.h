@@ -8,13 +8,12 @@
 
 #import <UIKit/UIKit.h>
 #import <AVFoundation/AVFoundation.h>
-#import <CoreMedia/CoreMedia.h>
+//#import <CoreMedia/CoreMedia.h>
 #import <MediaPlayer/MediaPlayer.h>
-
 #import "GG977StationInfo.h"
 
 @interface GG977PlayerViewController : UIViewController
 
-@property GG977StationInfo *stationInfo;
+@property (strong, nonatomic) GG977StationInfo *stationInfo;
 
 @end

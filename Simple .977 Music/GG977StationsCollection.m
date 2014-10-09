@@ -10,7 +10,7 @@
 
 @interface GG977StationsCollection ()
 
-@property(nonatomic, retain) NSDictionary *stations;
+@property(nonatomic, strong) NSDictionary *stations;
 
 @end
 
