@@ -9,6 +9,7 @@
 #import <UIKit/UIKit.h>
 #import <AVFoundation/AVFoundation.h>
 #import <CoreMedia/CoreMedia.h>
+#import <MediaPlayer/MediaPlayer.h>
 
 #import "GG977StationInfo.h"
 

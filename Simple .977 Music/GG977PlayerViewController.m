@@ -25,15 +25,15 @@ NSString *keyTimedMetadata	= @"currentItem.timedMetadata";
 
 @interface GG977PlayerViewController ()
 
-@property (retain) AVPlayer *player;
-@property (retain) AVPlayerItem *playerItem;
+@property (strong) AVPlayer *player;
+@property (strong) AVPlayerItem *playerItem;
 
 @property (weak, nonatomic) IBOutlet UIButton *playPauseButton;
-@property (weak, nonatomic) IBOutlet UISlider *audioVolumeSlider;
 @property (weak, nonatomic) IBOutlet UIButton *infoButton;
 @property (weak, nonatomic) IBOutlet UILabel *artistInfo;
 @property (weak, nonatomic) IBOutlet UILabel *trackInfo;
 @property (weak, nonatomic) IBOutlet UILabel *stationTitle;
+@property (weak, nonatomic) IBOutlet MPVolumeView *volumeView;
 
 @property GG977StationsViewController *stationsController;  // Ссылка на форму с списом станций, чтобы знать какую выбрал пользователь
 
@@ -70,6 +70,17 @@ NSString *keyTimedMetadata	= @"currentItem.timedMetadata";
 - (void)viewDidLoad {
     [super viewDidLoad];
     
+    UISlider *volumeViewSlider;
+    // Find the volume view slider
+    for (UIView *view in [self.volumeView subviews]){
+        if ([[[view class] description] isEqualToString:@"MPVolumeSlider"]) {
+            volumeViewSlider = (UISlider *) view;
+        }
+    }
+    
+    [volumeViewSlider setMinimumValueImage:[UIImage imageNamed:@"volume_down.png"]];
+    [volumeViewSlider setMaximumValueImage:[UIImage imageNamed:@"volume_up.png"]];
+    
     // При первом запуске получаем ссылку на форму с станциями и дисейблим кнопки, т.к. еще нечего проигрывать
     UINavigationController *navController = (UINavigationController *)self.tabBarController.viewControllers[0];
     self.stationsController = (GG977StationsViewController *)navController.topViewController;
@@ -101,14 +112,14 @@ NSString *keyTimedMetadata	= @"currentItem.timedMetadata";
 {
     self.playPauseButton.enabled = YES;
     self.infoButton.enabled = YES;
-    self.audioVolumeSlider.enabled = YES;
+//    self.audioVolumeSlider.enabled = YES;
 }
 
 -(void)disablePlayerButtons
 {
     self.playPauseButton.enabled = NO;
     self.infoButton.enabled = NO;
-    self.audioVolumeSlider.enabled = NO;
+//    self.audioVolumeSlider.enabled = NO;
 }
 
 #pragma mark - Button Action Methods
@@ -120,7 +131,7 @@ NSString *keyTimedMetadata	= @"currentItem.timedMetadata";
 
 - (IBAction)changeVolume:(id)sender
 {
-    self.player.volume = self.audioVolumeSlider.value;
+//    self.player.volume = self.audioVolumeSlider.value;
 }
 
 #pragma mark - Player Notifications
@@ -299,7 +310,7 @@ NSString *keyTimedMetadata	= @"currentItem.timedMetadata";
             case AVPlayerStatusReadyToPlay:
             {
                 [self enablePlayerButtons];
-                self.audioVolumeSlider.value = self.player.volume;
+//                self.audioVolumeSlider.value = self.player.volume;
                 self.trackInfo.text = @"Getting metadata...";
                 [self.player play];
                 
