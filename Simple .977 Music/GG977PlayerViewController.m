@@ -53,22 +53,40 @@ NSString *keyTimedMetadata	= @"currentItem.timedMetadata";
     [volumeViewSlider setMaximumValueImage:[UIImage imageNamed:@"volume_up.png"]];
     
     [self disablePlayerButtons];
+    [self clearLabels];
     
     if (self.stationInfo != nil) {
         self.stationTitle.text = self.stationInfo.title;
         self.trackInfo.text = @"Connecting...";
     }
-}
-
-- (void)viewDidAppear:(BOOL)animated
-{
-    [super viewDidAppear:animated];
     
     // Turn on remote control event delivery
     [[UIApplication sharedApplication] beginReceivingRemoteControlEvents];
     
     // Set itself as the first responder
     [self becomeFirstResponder];
+    
+    NSError *activationError = nil;
+    BOOL success = [[AVAudioSession sharedInstance] setActive: YES error: &activationError];
+    if (!success) {
+        NSLog(@"%@", activationError);
+    }
+    
+    NSError *setCategoryError = nil;
+    success = [[AVAudioSession sharedInstance]
+                    setCategory: AVAudioSessionCategoryPlayback
+                    error: &setCategoryError];
+    
+    if (!success) {
+        NSLog(@"%@", setCategoryError);
+    }
+
+    
+//    // Turn off remote control event delivery
+//    [[UIApplication sharedApplication] endReceivingRemoteControlEvents];
+//    
+//    // Resign as first responder
+//    [self resignFirstResponder];
 }
 
 - (void)didReceiveMemoryWarning {
@@ -228,7 +246,14 @@ NSString *keyTimedMetadata	= @"currentItem.timedMetadata";
     return self.player.rate != 0.f;
 }
 
-#pragma mark - Play, Stop Buttons
+#pragma mark - Play, Stop Buttons and Labels
+
+- (void)clearLabels
+{
+    self.artistInfo.text = @"";
+    self.trackInfo.text = @"";
+    self.stationTitle.text = NSLocalizedString(@"No Station Title", nil);
+}
 
 - (void)syncPlayPauseButton
 {
@@ -296,6 +321,7 @@ NSString *keyTimedMetadata	= @"currentItem.timedMetadata";
 -(void)assetFailedToPrepareForPlayback:(NSError *)error
 {
     [self disablePlayerButtons];
+    [self clearLabels];
     
     UIAlertView *alertView = [[UIAlertView alloc] initWithTitle:[error localizedDescription]
                                                         message:[error localizedFailureReason]

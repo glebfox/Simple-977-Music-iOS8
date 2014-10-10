@@ -12,7 +12,7 @@
 "Xfa-4u-Uys.title" = "Все станции";
 
 /* Class = "IBUITabBarItem"; title = "Now Playing"; ObjectID = "wLX-WN-kLK"; */
-"wLX-WN-kLK.title" = "Сейас играет";
+"wLX-WN-kLK.title" = "Сейчас играет";
 
 /* Class = "IBUILabel"; text = "No station is selected"; ObjectID = "wsP-R4-Ynk"; */
-"wsP-R4-Ynk.text" = "Ниодна станция не выбрана";
+/*"wsP-R4-Ynk.text" = "Ни одна станция не выбрана";*/
