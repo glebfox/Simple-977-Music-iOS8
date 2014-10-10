@@ -18,14 +18,6 @@
 
 @implementation GG977StationsViewController
 
-//-(void)viewWillDisappear:(BOOL)animated{
-//    [super viewWillAppear:animated];
-//    // Снимаем выделение с ячейки
-//    if ([self.tableView indexPathForSelectedRow]) {
-//        [self.tableView deselectRowAtIndexPath:self.tableView.indexPathForSelectedRow animated:YES];
-//    }
-//}
-
 - (void)viewDidLoad {
     [super viewDidLoad];
     
@@ -66,7 +58,6 @@
 
 - (void)tableView:(UITableView *)tableView didSelectRowAtIndexPath:(NSIndexPath *)indexPath
 {
-    [tableView deselectRowAtIndexPath:indexPath animated:NO];
     UIView * fromView = self.tabBarController.selectedViewController.view;
     UIView * toView = [[self.tabBarController.viewControllers objectAtIndex:1] view];
     

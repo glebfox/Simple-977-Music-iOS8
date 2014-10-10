@@ -7,7 +7,6 @@
 //
 
 #import "GG977PlayerViewController.h"
-#import "GG977StationsViewController.h"
 
 // Переменные хранящие контекст наблюдателя
 static void *timedMetadataObserverContext = &timedMetadataObserverContext;
@@ -94,98 +93,6 @@ NSString *keyTimedMetadata	= @"currentItem.timedMetadata";
     }
 }
 
-- (BOOL)isPlaying
-{
-    return self.player.rate != 0.f;
-}
-
-#pragma mark - Play, Stop Buttons
-
-- (void)syncPlayPauseButton
-{
-    // В зависимости от состояния отображаем ту или иную картинку для кнопки
-    UIImage *image = [[UIImage imageNamed: [self isPlaying] ? @"pause" : @"play"] imageWithRenderingMode:UIImageRenderingModeAlwaysTemplate];
-    [self.playPauseButton setImage: image forState:UIControlStateNormal];
-}
-
--(void)enablePlayerButtons
-{
-    self.playPauseButton.enabled = YES;
-    self.infoButton.enabled = YES;
-//    self.audioVolumeSlider.enabled = YES;
-}
-
--(void)disablePlayerButtons
-{
-    self.playPauseButton.enabled = NO;
-    self.infoButton.enabled = NO;
-//    self.audioVolumeSlider.enabled = NO;
-}
-
-#pragma mark - Button Action Methods
-
-- (IBAction)playPause:(id)sender
-{
-    [self isPlaying] ? [self.player pause] : [self.player play];
-}
-
-- (IBAction)changeVolume:(id)sender
-{
-//    self.player.volume = self.audioVolumeSlider.value;
-}
-
-#pragma mark - Player Notifications
-
-// Called when the player item has played to its end time.
-// Не используется так как у стрима нет конца
-- (void) playerItemDidReachEnd:(NSNotification*) notification
-{
-    NSLog(@"playerItemDidReachEnd");
-}
-
-#pragma mark - Timed metadata
-
-// Обрабатывает метаданные
-- (void)handleTimedMetadata:(AVMetadataItem*)timedMetadata
-{
-    if ([timedMetadata.commonKey isEqualToString:@"title"]) {
-        // Здесь не совсем универсальная ситуация, поскольку разыне станцие по разному разделяют артиста и название трека
-        NSArray *array = [[timedMetadata.value description] componentsSeparatedByString:@" - "];
-        if (array.count > 1) {
-            self.artistInfo.text = array[0];
-            self.trackInfo.text = array[1];
-        } else
-            self.trackInfo.text = array[0];
-    }
-}
-
-#pragma mark -
-#pragma mark Error Handling - Preparing Assets for Playback Failed
-
-/* --------------------------------------------------------------
- **  Called when an asset fails to prepare for playback for any of
- **  the following reasons:
- **
- **  1) values of asset keys did not load successfully,
- **  2) the asset keys did load successfully, but the asset is not
- **     playable
- **  3) the item did not become ready to play.
- ** ----------------------------------------------------------- */
-
--(void)assetFailedToPrepareForPlayback:(NSError *)error
-{
-    [self disablePlayerButtons];
-    
-    UIAlertView *alertView = [[UIAlertView alloc] initWithTitle:[error localizedDescription]
-                                                        message:[error localizedFailureReason]
-                                                       delegate:nil
-                                              cancelButtonTitle:@"OK"
-                                              otherButtonTitles:nil];
-    [alertView show];
-}
-
-#pragma mark Prepare to play asset
-
 /*
  Invoked at the completion of the loading of the values for all keys on the asset that we require.
  Checks whether loading was successfull and whether the asset is playable.
@@ -224,14 +131,14 @@ NSString *keyTimedMetadata	= @"currentItem.timedMetadata";
     
     [self enablePlayerButtons];
     
-    /* Если у нас уже был AVPlayerItem, то удаляем его обсервер. */
+    /* Если у нас уже был AVPlayerItem, то удаляем его слушателя. */
     if (self.playerItem)
     {
         [self.playerItem removeObserver:self forKeyPath:keyStatus];
         
-//        [[NSNotificationCenter defaultCenter] removeObserver:self
-//                                                        name:AVPlayerItemDidPlayToEndTimeNotification
-//                                                      object:self.playerItem];
+        //        [[NSNotificationCenter defaultCenter] removeObserver:self
+        //                                                        name:AVPlayerItemDidPlayToEndTimeNotification
+        //                                                      object:self.playerItem];
     }
     
     // Создаем новый playerItem
@@ -244,10 +151,10 @@ NSString *keyTimedMetadata	= @"currentItem.timedMetadata";
     
     /* When the player item has played to its end time we'll toggle
      the movie controller Pause button to be the Play button */
-//    [[NSNotificationCenter defaultCenter] addObserver:self
-//                                             selector:@selector(playerItemDidReachEnd:)
-//                                                 name:AVPlayerItemDidPlayToEndTimeNotification
-//                                               object:self.playerItem];
+    //    [[NSNotificationCenter defaultCenter] addObserver:self
+    //                                             selector:@selector(playerItemDidReachEnd:)
+    //                                                 name:AVPlayerItemDidPlayToEndTimeNotification
+    //                                               object:self.playerItem];
     
     
     // Создаем нового player, если еще этого не делали
@@ -277,16 +184,98 @@ NSString *keyTimedMetadata	= @"currentItem.timedMetadata";
     if (self.player.currentItem != self.playerItem)
     {
         [self.player replaceCurrentItemWithPlayerItem:self.playerItem];
-        
-        NSLog(@"sync - self.player.currentItem != self.playerItem");
         [self syncPlayPauseButton];
     }
 }
 
+- (BOOL)isPlaying
+{
+    return self.player.rate != 0.f;
+}
+
+#pragma mark - Play, Stop Buttons
+
+- (void)syncPlayPauseButton
+{
+    // В зависимости от состояния отображаем ту или иную картинку для кнопки
+    UIImage *image = [[UIImage imageNamed: [self isPlaying] ? @"pause" : @"play"] imageWithRenderingMode:UIImageRenderingModeAlwaysTemplate];
+    [self.playPauseButton setImage: image forState:UIControlStateNormal];
+}
+
+-(void)enablePlayerButtons
+{
+    self.playPauseButton.enabled = YES;
+    self.infoButton.enabled = YES;
+}
+
+-(void)disablePlayerButtons
+{
+    self.playPauseButton.enabled = NO;
+    self.infoButton.enabled = NO;
+}
+
+#pragma mark - Button Action Methods
+
+- (IBAction)playPause:(id)sender
+{
+    [self isPlaying] ? [self.player pause] : [self.player play];
+}
+
+- (IBAction)changeVolume:(id)sender
+{
+//    self.player.volume = self.audioVolumeSlider.value;
+}
+
+#pragma mark - Player Notifications
+
+// Called when the player item has played to its end time.
+// Не используется так как у стрима нет конца
+- (void) playerItemDidReachEnd:(NSNotification*) notification
+{
+    NSLog(@"playerItemDidReachEnd");
+}
+
+#pragma mark - Timed metadata
+
+// Обрабатывает метаданные
+- (void)handleTimedMetadata:(AVMetadataItem*)timedMetadata
+{
+    if ([timedMetadata.commonKey isEqualToString:@"title"]) {
+        // Здесь не совсем универсальная ситуация, поскольку разные станцие по разному разделяют артиста и название трека
+        NSArray *array = [[timedMetadata.value description] componentsSeparatedByString:@" - "];
+        if (array.count > 1) {
+            self.artistInfo.text = array[0];
+            self.trackInfo.text = array[1];
+        } else
+            self.trackInfo.text = array[0];
+    }
+}
+
+#pragma mark - Error Handling - Preparing Assets for Playback Failed
+
+/* --------------------------------------------------------------
+ **  Called when an asset fails to prepare for playback for any of
+ **  the following reasons:
+ **
+ **  1) values of asset keys did not load successfully,
+ **  2) the asset keys did load successfully, but the asset is not
+ **     playable
+ **  3) the item did not become ready to play.
+ ** ----------------------------------------------------------- */
+
+-(void)assetFailedToPrepareForPlayback:(NSError *)error
+{
+    [self disablePlayerButtons];
+    
+    UIAlertView *alertView = [[UIAlertView alloc] initWithTitle:[error localizedDescription]
+                                                        message:[error localizedFailureReason]
+                                                       delegate:nil
+                                              cancelButtonTitle:@"OK"
+                                              otherButtonTitles:nil];
+    [alertView show];
+}
 
 #pragma mark - Asset Key Value Observing
-
-#pragma mark Key Value Observer for player rate, currentItem, player item status
 
 - (void)observeValueForKeyPath:(NSString*) path
                       ofObject:(id)object
@@ -310,7 +299,6 @@ NSString *keyTimedMetadata	= @"currentItem.timedMetadata";
             case AVPlayerStatusReadyToPlay:
             {
                 [self enablePlayerButtons];
-//                self.audioVolumeSlider.value = self.player.volume;
                 self.trackInfo.text = @"Getting metadata...";
                 [self.player play];
                 

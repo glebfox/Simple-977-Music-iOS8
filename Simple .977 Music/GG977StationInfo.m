@@ -10,6 +10,17 @@
 
 @implementation GG977StationInfo
 
+- (id)initWithTitle:(NSString *)title url:(NSURL *)url
+{
+    if ((self = [super init])) {
+        self.title = title;
+        self.url = url;
+    }
+    return self;
+}
+
+#pragma mark NSObject
+
 - (NSString *)description
 {
     NSMutableString *description = [[NSMutableString alloc] initWithString:[self.class description]];
@@ -19,13 +30,19 @@
     return description;
 }
 
-- (id)initWithTitle:(NSString *)title url:(NSURL *)url
-{
+#pragma mark NSCoding
+
+- (id)initWithCoder:(NSCoder *)decoder {
     if ((self = [super init])) {
-        self.title = title;
-        self.url = url;
+        self.title = [decoder decodeObjectForKey:@"title"];
+        self.url = [decoder decodeObjectForKey:@"url"];
     }
     return self;
+}
+
+- (void)encodeWithCoder:(NSCoder *)encoder {
+    if (self.title) [encoder encodeObject:self.title forKey:@"title"];
+    if (self.url) [encoder encodeObject:self.url forKey:@"url"];
 }
 
 @end

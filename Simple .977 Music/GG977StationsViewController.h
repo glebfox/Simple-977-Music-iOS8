@@ -7,7 +7,7 @@
 //
 
 #import <UIKit/UIKit.h>
-#import "GG977StationInfo.h"
+
 
 @interface GG977StationsViewController : UIViewController <UITableViewDelegate, UITableViewDataSource>
 
