@@ -13,3 +13,7 @@
 "The assets tracks were loaded, but could not be made playable." = "Треки загруженны, но не могут быть воспроизведены";
 
 "No Station Title" = "Ни одна станция не выбрана";
+"OK" = "Понятно";
+"Getting metadata..." = "Получение метаданных...";
+"No metadata" = "[Метаданных нету]";
+"Connecting..." = "Соединение...";

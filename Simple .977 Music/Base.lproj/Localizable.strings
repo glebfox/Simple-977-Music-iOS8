@@ -13,3 +13,7 @@
 "The assets tracks were loaded, but could not be made playable." = "The assets tracks were loaded, but could not be made playable.";
 
 "No Station Title" = "No station is selected";
+"OK" = "OK";
+"Getting metadata..." = "Getting metadata...";
+"No metadata" = "[No metadata]";
+"Connecting..." = "Connecting...";

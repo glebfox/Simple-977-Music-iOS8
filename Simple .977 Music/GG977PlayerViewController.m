@@ -35,6 +35,7 @@ NSString *keyTimedMetadata	= @"currentItem.timedMetadata";
 @property (weak, nonatomic) IBOutlet MPVolumeView *volumeView;
 
 @property BOOL isInterrupted;
+@property (weak) NSTimer *timer;
 
 @end
 
@@ -59,7 +60,7 @@ NSString *keyTimedMetadata	= @"currentItem.timedMetadata";
     
     if (self.stationInfo != nil) {
         self.stationTitle.text = self.stationInfo.title;
-        self.trackInfo.text = @"Connecting...";
+        self.trackInfo.text = NSLocalizedString(@"Connecting...", nil);
     }
     
     // Turn on remote control event delivery
@@ -122,7 +123,7 @@ NSString *keyTimedMetadata	= @"currentItem.timedMetadata";
         _stationInfo = stationInfo;
     
         self.stationTitle.text = _stationInfo.title;
-        self.trackInfo.text = @"Connecting...";
+        self.trackInfo.text = NSLocalizedString(@"Connecting...", nil);
         self.artistInfo.text = @"";
     
         // Создаем asset для заданного url. Загружаем значения для ключей "tracks", "playable".
@@ -297,6 +298,8 @@ NSString *keyTimedMetadata	= @"currentItem.timedMetadata";
 - (void)handleTimedMetadata:(AVMetadataItem*)timedMetadata
 {
 //    NSLog(@"handleTimedMetadata");
+    [self.timer invalidate];
+    self.timer = nil;
     if ([timedMetadata.commonKey isEqualToString:@"title"]) {
         // Здесь не совсем универсальная ситуация, поскольку разные станцие по разному разделяют артиста и название трека
         NSArray *array = [[timedMetadata.value description] componentsSeparatedByString:@" - "];
@@ -328,7 +331,7 @@ NSString *keyTimedMetadata	= @"currentItem.timedMetadata";
     UIAlertView *alertView = [[UIAlertView alloc] initWithTitle:[error localizedDescription]
                                                         message:[error localizedFailureReason]
                                                        delegate:nil
-                                              cancelButtonTitle:@"OK"
+                                              cancelButtonTitle:NSLocalizedString(@"OK", nil)
                                               otherButtonTitles:nil];
     [alertView show];
 }
@@ -360,8 +363,15 @@ NSString *keyTimedMetadata	= @"currentItem.timedMetadata";
                 NSLog(@"AVPlayerStatusReadyToPlay");
                 if (!self.isInterrupted) {
                     [self enablePlayerButtons];
-                    self.trackInfo.text = @"Getting metadata...";
+                    self.trackInfo.text = NSLocalizedString(@"Getting metadata...", nil);
                     [self.player play];
+                    
+                    NSTimer *timer = [NSTimer scheduledTimerWithTimeInterval:10.0
+                                                     target:self
+                                                   selector:@selector(timerFired:)
+                                                   userInfo:nil
+                                                    repeats:NO];
+                    self.timer = timer;
                 }
                 self.isInterrupted = NO;
             }
@@ -414,6 +424,11 @@ NSString *keyTimedMetadata	= @"currentItem.timedMetadata";
         [super observeValueForKeyPath:path ofObject:object change:change context:context];
     }
     return;
+}
+
+- (void)timerFired:(NSTimer *)timer
+{
+    self.trackInfo.text = NSLocalizedString(@"No metadata", nil);
 }
 
 /*
