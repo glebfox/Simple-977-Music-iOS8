@@ -34,13 +34,15 @@ NSString *keyTimedMetadata	= @"currentItem.timedMetadata";
 @property (weak, nonatomic) IBOutlet UILabel *stationTitle;
 @property (weak, nonatomic) IBOutlet MPVolumeView *volumeView;
 
+@property BOOL isInterrupted;
+
 @end
 
 @implementation GG977PlayerViewController
 
 - (void)viewDidLoad {
     [super viewDidLoad];
-    
+//    NSLog(@"viewDidLoad");
     UISlider *volumeViewSlider;
     // Find the volume view slider
     for (UIView *view in [self.volumeView subviews]){
@@ -82,6 +84,11 @@ NSString *keyTimedMetadata	= @"currentItem.timedMetadata";
         NSLog(@"%@", setCategoryError);
     }
     
+    [[NSNotificationCenter defaultCenter] addObserver:self
+                                             selector:@selector(handleAudioSessionInterruption:)
+                                                 name:AVAudioSessionInterruptionNotification
+                                               object:[AVAudioSession sharedInstance]];
+    
 //    // Turn off remote control event delivery
 //    [[UIApplication sharedApplication] endReceivingRemoteControlEvents];
 //    
@@ -115,6 +122,7 @@ NSString *keyTimedMetadata	= @"currentItem.timedMetadata";
 
 - (void)setStationInfo:(GG977StationInfo *)stationInfo
 {
+//    NSLog(@"setStationInfo");
     if (_stationInfo != stationInfo) {
     
         _stationInfo = stationInfo;
@@ -146,6 +154,7 @@ NSString *keyTimedMetadata	= @"currentItem.timedMetadata";
  */
 - (void)prepareToPlayAsset:(AVURLAsset *)asset withKeys:(NSArray *)requestedKeys
 {
+//    NSLog(@"prepareToPlayAsset");
     // Убеждаемся, что значение каждого ключа успешно загруженно
     for (NSString *thisKey in requestedKeys)
     {
@@ -200,11 +209,6 @@ NSString *keyTimedMetadata	= @"currentItem.timedMetadata";
     //                                             selector:@selector(playerItemDidReachEnd:)
     //                                                 name:AVPlayerItemDidPlayToEndTimeNotification
     //                                               object:self.playerItem];
-
-//        [[NSNotificationCenter defaultCenter] addObserver:self
-//                                                 selector:@selector(playerItemDidReachEnd:)
-//                                                     name:
-//                                                   object:self.playerItem];
     
     // Создаем нового player, если еще этого не делали
     if (!self.player)
@@ -253,6 +257,7 @@ NSString *keyTimedMetadata	= @"currentItem.timedMetadata";
 
 - (void)syncPlayPauseButton
 {
+    NSLog(@"syncPlayPauseButton");
     // В зависимости от состояния отображаем ту или иную картинку для кнопки
     UIImage *image = [[UIImage imageNamed: [self isPlaying] ? @"pause" : @"play"] imageWithRenderingMode:UIImageRenderingModeAlwaysTemplate];
     [self.playPauseButton setImage: image forState:UIControlStateNormal];
@@ -274,16 +279,38 @@ NSString *keyTimedMetadata	= @"currentItem.timedMetadata";
 
 - (IBAction)playPause:(id)sender
 {
+//    NSLog(@"playPause");
     [self isPlaying] ? [self.player pause] : [self.player play];
 }
 
-#pragma mark - Player Notifications
+#pragma mark - Notifications
 
 // Called when the player item has played to its end time.
 // Не используется так как у стрима нет конца
-- (void) playerItemDidReachEnd:(NSNotification*) notification
+- (void)playerItemDidReachEnd:(NSNotification*) notification
 {
     NSLog(@"playerItemDidReachEnd");
+}
+
+- (void)handleAudioSessionInterruption:(NSNotification*) notification
+{
+    NSNumber *interruptionType = [[notification userInfo] objectForKey:AVAudioSessionInterruptionTypeKey];
+//    NSNumber *interruptionOption = [[notification userInfo] objectForKey:AVAudioSessionInterruptionOptionKey];
+    NSLog(@"interruptionType - %d", interruptionType.unsignedIntegerValue);
+    
+    switch (interruptionType.unsignedIntegerValue) {
+        case AVAudioSessionInterruptionTypeBegan: {
+            NSLog(@"AVAudioSessionInterruptionTypeBegan");
+            self.isInterrupted = YES;
+            [self.player pause];
+        } break;
+        case AVAudioSessionInterruptionTypeEnded: {
+            NSLog(@"AVAudioSessionInterruptionTypeEnded");
+//            [self.player play];
+        } break;
+        default:
+            break;
+    }
 }
 
 #pragma mark - Timed metadata
@@ -291,6 +318,7 @@ NSString *keyTimedMetadata	= @"currentItem.timedMetadata";
 // Обрабатывает метаданные
 - (void)handleTimedMetadata:(AVMetadataItem*)timedMetadata
 {
+//    NSLog(@"handleTimedMetadata");
     if ([timedMetadata.commonKey isEqualToString:@"title"]) {
         // Здесь не совсем универсальная ситуация, поскольку разные станцие по разному разделяют артиста и название трека
         NSArray *array = [[timedMetadata.value description] componentsSeparatedByString:@" - "];
@@ -344,20 +372,26 @@ NSString *keyTimedMetadata	= @"currentItem.timedMetadata";
             // Указывает на то, что player еще не имеет конкретного статуса, т.к. он еще не пробовал загрузить медиа данные
             case AVPlayerStatusUnknown:
             {
+//                NSLog(@"AVPlayerStatusUnknown");
                 [self disablePlayerButtons];
             }
                 break;
             // AVPlayerItem готов к проигрыванию
             case AVPlayerStatusReadyToPlay:
             {
-                [self enablePlayerButtons];
-                self.trackInfo.text = @"Getting metadata...";
-                [self.player play];
+                NSLog(@"AVPlayerStatusReadyToPlay");
+                if (!self.isInterrupted) {
+                    [self enablePlayerButtons];
+                    self.trackInfo.text = @"Getting metadata...";
+                    [self.player play];
+                }
+                self.isInterrupted = NO;
             }
                 break;
                 
             case AVPlayerStatusFailed:
             {
+//                NSLog(@"AVPlayerStatusFailed");
                 AVPlayerItem *thePlayerItem = (AVPlayerItem *)object;
                 [self assetFailedToPrepareForPlayback:thePlayerItem.error];
             }
@@ -367,11 +401,13 @@ NSString *keyTimedMetadata	= @"currentItem.timedMetadata";
     // AVPlayer "rate"
     else if (context == rateObserverContext)
     {
+//        NSLog(@"rateObserverContext - syncPlayPauseButton");
         [self syncPlayPauseButton];
     }
     // AVPlayer "currentItem". Срабатывает когда AVPlayer вызывает replaceCurrentItemWithPlayerItem:
     else if (context == currentItemObserverContext)
     {
+//        NSLog(@"currentItemObserverContext");
         AVPlayerItem *newPlayerItem = [change objectForKey:NSKeyValueChangeNewKey];
         
         // Если вдруг нечем проигрывать, то делаем кнопки неактивными
@@ -387,6 +423,7 @@ NSString *keyTimedMetadata	= @"currentItem.timedMetadata";
     // Обрабатываем изменения метаданных
     else if (context == timedMetadataObserverContext)
     {
+//        NSLog(@"timedMetadataObserverContext");
         NSArray* array = self.player.currentItem.timedMetadata;
         for (AVMetadataItem *metadataItem in array)
         {
@@ -395,6 +432,7 @@ NSString *keyTimedMetadata	= @"currentItem.timedMetadata";
     }
     else
     {
+//        NSLog(@"observeValueForKeyPath - super");
         [super observeValueForKeyPath:path ofObject:object change:change context:context];
     }
     return;
