@@ -20,8 +20,6 @@
 
 - (void)viewDidLoad {
     [super viewDidLoad];
-    
-    self.itemsToDisplay = [[GG977StationsCollection sharedInstance] allStations];
 }
 
 - (void)didReceiveMemoryWarning {

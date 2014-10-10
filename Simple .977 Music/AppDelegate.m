@@ -20,9 +20,7 @@
 - (BOOL)application:(UIApplication *)application didFinishLaunchingWithOptions:(NSDictionary *)launchOptions {
     // Override point for customization after application launch.
     
-    UIStoryboard *mainstoryboard = [UIStoryboard storyboardWithName:@"Main" bundle:nil];
-    UIViewController *root = mainstoryboard.instantiateInitialViewController;
-    
+    UIViewController *root = self.window.rootViewController;
     if ([root class] == [UITabBarController class]) {
         UITabBarController *tabBar = (UITabBarController *)root;
         UIViewController *controller = [tabBar.viewControllers objectAtIndex:0];
