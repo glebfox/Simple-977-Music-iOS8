@@ -176,7 +176,7 @@ NSString *keyTimedMetadata	= @"currentItem.timedMetadata";
                                    localizedDescription, NSLocalizedDescriptionKey,
                                    localizedFailureReason, NSLocalizedFailureReasonErrorKey,
                                    nil];
-        NSError *assetCannotBePlayedError = [NSError errorWithDomain:@"977Music" code:0 userInfo:errorDict];
+        NSError *assetCannotBePlayedError = [NSError errorWithDomain:@"GG977Music" code:0 userInfo:errorDict];
         
         [self assetFailedToPrepareForPlayback:assetCannotBePlayedError];
         
@@ -189,10 +189,6 @@ NSString *keyTimedMetadata	= @"currentItem.timedMetadata";
     if (self.playerItem)
     {
         [self.playerItem removeObserver:self forKeyPath:keyStatus];
-        
-        //        [[NSNotificationCenter defaultCenter] removeObserver:self
-        //                                                        name:AVPlayerItemDidPlayToEndTimeNotification
-        //                                                      object:self.playerItem];
     }
     
     // Создаем новый playerItem
@@ -202,13 +198,6 @@ NSString *keyTimedMetadata	= @"currentItem.timedMetadata";
                       forKeyPath:keyStatus
                          options:NSKeyValueObservingOptionInitial | NSKeyValueObservingOptionNew
                          context:playerItemStatusObserverContext];
-    
-    /* When the player item has played to its end time we'll toggle
-     the movie controller Pause button to be the Play button */
-    //    [[NSNotificationCenter defaultCenter] addObserver:self
-    //                                             selector:@selector(playerItemDidReachEnd:)
-    //                                                 name:AVPlayerItemDidPlayToEndTimeNotification
-    //                                               object:self.playerItem];
     
     // Создаем нового player, если еще этого не делали
     if (!self.player)
@@ -257,7 +246,7 @@ NSString *keyTimedMetadata	= @"currentItem.timedMetadata";
 
 - (void)syncPlayPauseButton
 {
-    NSLog(@"syncPlayPauseButton");
+//    NSLog(@"syncPlayPauseButton");
     // В зависимости от состояния отображаем ту или иную картинку для кнопки
     UIImage *image = [[UIImage imageNamed: [self isPlaying] ? @"pause" : @"play"] imageWithRenderingMode:UIImageRenderingModeAlwaysTemplate];
     [self.playPauseButton setImage: image forState:UIControlStateNormal];
@@ -284,13 +273,6 @@ NSString *keyTimedMetadata	= @"currentItem.timedMetadata";
 }
 
 #pragma mark - Notifications
-
-// Called when the player item has played to its end time.
-// Не используется так как у стрима нет конца
-- (void)playerItemDidReachEnd:(NSNotification*) notification
-{
-    NSLog(@"playerItemDidReachEnd");
-}
 
 - (void)handleAudioSessionInterruption:(NSNotification*) notification
 {
