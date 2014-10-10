@@ -60,10 +60,46 @@ NSString *keyTimedMetadata	= @"currentItem.timedMetadata";
     }
 }
 
+- (void)viewDidAppear:(BOOL)animated
+{
+    [super viewDidAppear:animated];
+    
+    // Turn on remote control event delivery
+    [[UIApplication sharedApplication] beginReceivingRemoteControlEvents];
+    
+    // Set itself as the first responder
+    [self becomeFirstResponder];
+}
+
 - (void)didReceiveMemoryWarning {
     [super didReceiveMemoryWarning];
     // Dispose of any resources that can be recreated.
 }
+
+- (void)remoteControlReceivedWithEvent:(UIEvent *)receivedEvent {
+    
+    if (receivedEvent.type == UIEventTypeRemoteControl) {
+        switch (receivedEvent.subtype) {
+                
+            case UIEventSubtypeRemoteControlPlay:
+            case UIEventSubtypeRemoteControlPause:
+                [self playPause:nil];
+                break;
+                
+            case UIEventSubtypeRemoteControlPreviousTrack:
+//                [self previousTrack: nil];
+                break;
+                
+            case UIEventSubtypeRemoteControlNextTrack:
+//                [self nextTrack: nil];
+                break;
+                
+            default:
+                break;
+        }
+    }
+}
+
 
 #pragma mark - Player
 
@@ -100,7 +136,6 @@ NSString *keyTimedMetadata	= @"currentItem.timedMetadata";
  */
 - (void)prepareToPlayAsset:(AVURLAsset *)asset withKeys:(NSArray *)requestedKeys
 {
-    NSLog(@"prepareToPlayAsset");
     // Убеждаемся, что значение каждого ключа успешно загруженно
     for (NSString *thisKey in requestedKeys)
     {
@@ -221,11 +256,6 @@ NSString *keyTimedMetadata	= @"currentItem.timedMetadata";
     [self isPlaying] ? [self.player pause] : [self.player play];
 }
 
-- (IBAction)changeVolume:(id)sender
-{
-//    self.player.volume = self.audioVolumeSlider.value;
-}
-
 #pragma mark - Player Notifications
 
 // Called when the player item has played to its end time.
@@ -301,7 +331,6 @@ NSString *keyTimedMetadata	= @"currentItem.timedMetadata";
                 [self enablePlayerButtons];
                 self.trackInfo.text = @"Getting metadata...";
                 [self.player play];
-                
             }
                 break;
                 
