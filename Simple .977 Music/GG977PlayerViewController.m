@@ -66,6 +66,7 @@ NSString *keyTimedMetadata	= @"currentItem.timedMetadata";
     // Set itself as the first responder
     [self becomeFirstResponder];
     
+    // Apple recommends that you explicitly activate your session—typically as part of your app’s viewDidLoad method, and set preferred hardware values prior to activating your audio session.
     NSError *activationError = nil;
     BOOL success = [[AVAudioSession sharedInstance] setActive: YES error: &activationError];
     if (!success) {
@@ -80,7 +81,6 @@ NSString *keyTimedMetadata	= @"currentItem.timedMetadata";
     if (!success) {
         NSLog(@"%@", setCategoryError);
     }
-
     
 //    // Turn off remote control event delivery
 //    [[UIApplication sharedApplication] endReceivingRemoteControlEvents];
@@ -98,18 +98,10 @@ NSString *keyTimedMetadata	= @"currentItem.timedMetadata";
     
     if (receivedEvent.type == UIEventTypeRemoteControl) {
         switch (receivedEvent.subtype) {
-                
             case UIEventSubtypeRemoteControlPlay:
             case UIEventSubtypeRemoteControlPause:
+            case UIEventSubtypeRemoteControlTogglePlayPause:
                 [self playPause:nil];
-                break;
-                
-            case UIEventSubtypeRemoteControlPreviousTrack:
-//                [self previousTrack: nil];
-                break;
-                
-            case UIEventSubtypeRemoteControlNextTrack:
-//                [self nextTrack: nil];
                 break;
                 
             default:
@@ -208,7 +200,11 @@ NSString *keyTimedMetadata	= @"currentItem.timedMetadata";
     //                                             selector:@selector(playerItemDidReachEnd:)
     //                                                 name:AVPlayerItemDidPlayToEndTimeNotification
     //                                               object:self.playerItem];
-    
+
+//        [[NSNotificationCenter defaultCenter] addObserver:self
+//                                                 selector:@selector(playerItemDidReachEnd:)
+//                                                     name:
+//                                                   object:self.playerItem];
     
     // Создаем нового player, если еще этого не делали
     if (!self.player)
