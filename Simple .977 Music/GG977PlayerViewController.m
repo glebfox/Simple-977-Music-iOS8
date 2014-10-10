@@ -88,12 +88,6 @@ NSString *keyTimedMetadata	= @"currentItem.timedMetadata";
                                              selector:@selector(handleAudioSessionInterruption:)
                                                  name:AVAudioSessionInterruptionNotification
                                                object:[AVAudioSession sharedInstance]];
-    
-//    // Turn off remote control event delivery
-//    [[UIApplication sharedApplication] endReceivingRemoteControlEvents];
-//    
-//    // Resign as first responder
-//    [self resignFirstResponder];
 }
 
 - (void)didReceiveMemoryWarning {
@@ -284,7 +278,9 @@ NSString *keyTimedMetadata	= @"currentItem.timedMetadata";
         case AVAudioSessionInterruptionTypeBegan: {
             NSLog(@"AVAudioSessionInterruptionTypeBegan");
             self.isInterrupted = YES;
-            [self.player pause];
+            if ([self isPlaying]) {
+                [self.player pause];
+            }
         } break;
         case AVAudioSessionInterruptionTypeEnded: {
             NSLog(@"AVAudioSessionInterruptionTypeEnded");
