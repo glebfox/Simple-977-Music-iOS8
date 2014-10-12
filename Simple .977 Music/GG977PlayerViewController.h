@@ -7,8 +7,6 @@
 //
 
 #import <UIKit/UIKit.h>
-#import <AVFoundation/AVFoundation.h>
-#import <MediaPlayer/MediaPlayer.h>
 #import "GG977StationInfo.h"
 
 @interface GG977PlayerViewController : UIViewController

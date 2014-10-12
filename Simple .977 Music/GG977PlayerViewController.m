@@ -7,6 +7,9 @@
 //
 
 #import "GG977PlayerViewController.h"
+#import <AVFoundation/AVFoundation.h>
+#import <MediaPlayer/MediaPlayer.h>
+#import <MediaPlayer/MPNowPlayingInfoCenter.h>
 
 // Переменные хранящие контекст наблюдателя
 static void *timedMetadataObserverContext = &timedMetadataObserverContext;
@@ -28,7 +31,6 @@ NSString *keyTimedMetadata	= @"currentItem.timedMetadata";
 @property (strong) AVPlayerItem *playerItem;
 
 @property (weak, nonatomic) IBOutlet UIButton *playPauseButton;
-@property (weak, nonatomic) IBOutlet UIButton *infoButton;
 @property (weak, nonatomic) IBOutlet UILabel *artistInfo;
 @property (weak, nonatomic) IBOutlet UILabel *trackInfo;
 @property (weak, nonatomic) IBOutlet UILabel *stationTitle;
@@ -250,13 +252,11 @@ NSString *keyTimedMetadata	= @"currentItem.timedMetadata";
 -(void)enablePlayerButtons
 {
     self.playPauseButton.enabled = YES;
-    self.infoButton.enabled = YES;
 }
 
 -(void)disablePlayerButtons
 {
     self.playPauseButton.enabled = NO;
-    self.infoButton.enabled = NO;
 }
 
 #pragma mark - Button Action Methods
@@ -273,7 +273,7 @@ NSString *keyTimedMetadata	= @"currentItem.timedMetadata";
 {
     NSNumber *interruptionType = [[notification userInfo] objectForKey:AVAudioSessionInterruptionTypeKey];
 //    NSNumber *interruptionOption = [[notification userInfo] objectForKey:AVAudioSessionInterruptionOptionKey];
-    NSLog(@"interruptionType - %d", interruptionType.unsignedIntegerValue);
+    NSLog(@"interruptionType - %lu", (unsigned long)interruptionType.unsignedIntegerValue);
     
     switch (interruptionType.unsignedIntegerValue) {
         case AVAudioSessionInterruptionTypeBegan: {
@@ -301,13 +301,25 @@ NSString *keyTimedMetadata	= @"currentItem.timedMetadata";
     [self.timer invalidate];
     self.timer = nil;
     if ([timedMetadata.commonKey isEqualToString:@"title"]) {
-        // Здесь не совсем универсальная ситуация, поскольку разные станцие по разному разделяют артиста и название трека
+        // Здесь не совсем универсальная ситуация, поскольку разные станцие по разному разделяют артиста и название трека, но с .977 всегда через "-"
         NSArray *array = [[timedMetadata.value description] componentsSeparatedByString:@" - "];
         if (array.count > 1) {
             self.artistInfo.text = array[0];
             self.trackInfo.text = array[1];
-        } else
+        } else {
             self.trackInfo.text = array[0];
+            self.artistInfo.text = @"";
+        }
+        
+        Class playingInfoCenter = NSClassFromString(@"MPNowPlayingInfoCenter");
+        
+        if (playingInfoCenter) {
+            NSMutableDictionary *songInfo = [[NSMutableDictionary alloc] init];
+            
+            [songInfo setObject:self.trackInfo.text forKey:MPMediaItemPropertyTitle];
+            [songInfo setObject:self.artistInfo.text forKey:MPMediaItemPropertyArtist];
+            [[MPNowPlayingInfoCenter defaultCenter] setNowPlayingInfo:songInfo];
+        }
     }
 }
 
