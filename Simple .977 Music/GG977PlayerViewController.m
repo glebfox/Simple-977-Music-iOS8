@@ -93,6 +93,20 @@ NSString *keyTimedMetadata	= @"currentItem.timedMetadata";
                                                object:[AVAudioSession sharedInstance]];
 }
 
+- (void)dealloc
+{
+    NSLog(@"dealloc");
+    [[NSNotificationCenter defaultCenter] removeObserver:self
+                                                    name:AVAudioSessionInterruptionNotification
+                                                  object:[AVAudioSession sharedInstance]];
+    
+    // Turn off remote control event delivery
+    [[UIApplication sharedApplication] endReceivingRemoteControlEvents];
+    
+    // Resign as first responder
+    [self resignFirstResponder];
+}
+
 - (void)didReceiveMemoryWarning {
     [super didReceiveMemoryWarning];
     // Dispose of any resources that can be recreated.
@@ -210,7 +224,7 @@ NSString *keyTimedMetadata	= @"currentItem.timedMetadata";
         // Свойство 'currentItem.timedMetadata' для слежения за изменениями metadata
         [self.player addObserver:self
                       forKeyPath:keyTimedMetadata
-                         options:0
+                         options:NSKeyValueObservingOptionNew
                          context:timedMetadataObserverContext];
         
         // Свойство AVPlayer "rate", чтобы отслеживать запуск и останов проигрывания
