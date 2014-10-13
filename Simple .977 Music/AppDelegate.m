@@ -61,29 +61,29 @@
 
 - (void)applicationWillTerminate:(UIApplication *)application {
     // Called when the application is about to terminate. Save data if appropriate. See also applicationDidEnterBackground:.
-//    NSLog(@"applicationWillTerminate");
-//    UIViewController *root = self.window.rootViewController;
-//    if ([root class] == [UITabBarController class]) {
-//        UITabBarController *tabBar = (UITabBarController *)root;
-//        UIViewController *controller = [tabBar.viewControllers objectAtIndex:1];
-//        if ([controller class] == [UINavigationController class]) {
-//            UINavigationController *navController = (UINavigationController *)controller;
-//            controller = navController.topViewController;
-//            if ([controller class] == [GG977PlayerViewController class]) {
-//                GG977PlayerViewController *player = (GG977PlayerViewController *)controller;
-//                NSLog(@"%@", player);
-//                [[NSNotificationCenter defaultCenter] removeObserver:player
-//                                                                name:AVAudioSessionInterruptionNotification
-//                                                              object:[AVAudioSession sharedInstance]];
-//                
-//                // Turn off remote control event delivery
-//                [[UIApplication sharedApplication] endReceivingRemoteControlEvents];
-//                
-//                // Resign as first responder
-//                [player resignFirstResponder];
-//            }
-//        }
-//    }
+    NSLog(@"applicationWillTerminate");
+    UIViewController *root = self.window.rootViewController;
+    if ([root class] == [UITabBarController class]) {
+        UITabBarController *tabBar = (UITabBarController *)root;
+        UIViewController *controller = [tabBar.viewControllers objectAtIndex:1];
+        if ([controller class] == [UINavigationController class]) {
+            UINavigationController *navController = (UINavigationController *)controller;
+            controller = navController.topViewController;
+            if ([controller class] == [GG977PlayerViewController class]) {
+                GG977PlayerViewController *player = (GG977PlayerViewController *)controller;
+                NSLog(@"%@", player);
+                [[NSNotificationCenter defaultCenter] removeObserver:player
+                                                                name:AVAudioSessionInterruptionNotification
+                                                              object:[AVAudioSession sharedInstance]];
+                
+                // Turn off remote control event delivery
+                [[UIApplication sharedApplication] endReceivingRemoteControlEvents];
+                
+                // Resign as first responder
+                [player resignFirstResponder];
+            }
+        }
+    }
 }
 
 @end

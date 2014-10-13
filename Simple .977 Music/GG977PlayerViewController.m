@@ -36,7 +36,8 @@ NSString *keyTimedMetadata	= @"currentItem.timedMetadata";
 @property (weak, nonatomic) IBOutlet UILabel *stationTitle;
 @property (weak, nonatomic) IBOutlet MPVolumeView *volumeView;
 
-@property BOOL isInterrupted;
+@property(getter=isInterrupted) BOOL interrupted;
+@property(getter=isNewStation) BOOL newStation;
 @property (weak) NSTimer *timer;
 
 @end
@@ -93,19 +94,19 @@ NSString *keyTimedMetadata	= @"currentItem.timedMetadata";
                                                object:[AVAudioSession sharedInstance]];
 }
 
-- (void)dealloc
-{
-    NSLog(@"dealloc");
-    [[NSNotificationCenter defaultCenter] removeObserver:self
-                                                    name:AVAudioSessionInterruptionNotification
-                                                  object:[AVAudioSession sharedInstance]];
-    
-    // Turn off remote control event delivery
-    [[UIApplication sharedApplication] endReceivingRemoteControlEvents];
-    
-    // Resign as first responder
-    [self resignFirstResponder];
-}
+//- (void)dealloc
+//{
+//    NSLog(@"dealloc");
+//    [[NSNotificationCenter defaultCenter] removeObserver:self
+//                                                    name:AVAudioSessionInterruptionNotification
+//                                                  object:[AVAudioSession sharedInstance]];
+//
+//    // Turn off remote control event delivery
+//    [[UIApplication sharedApplication] endReceivingRemoteControlEvents];
+//
+//    // Resign as first responder
+//    [self resignFirstResponder];
+//}
 
 - (void)didReceiveMemoryWarning {
     [super didReceiveMemoryWarning];
@@ -113,7 +114,7 @@ NSString *keyTimedMetadata	= @"currentItem.timedMetadata";
 }
 
 - (void)remoteControlReceivedWithEvent:(UIEvent *)receivedEvent {
-    
+//    NSLog(@"remoteControlReceivedWithEvent");
     if (receivedEvent.type == UIEventTypeRemoteControl) {
         switch (receivedEvent.subtype) {
             case UIEventSubtypeRemoteControlPlay:
@@ -133,7 +134,7 @@ NSString *keyTimedMetadata	= @"currentItem.timedMetadata";
 
 - (void)setStationInfo:(GG977StationInfo *)stationInfo
 {
-//    NSLog(@"setStationInfo");
+    NSLog(@"setStationInfo");
     if (_stationInfo != stationInfo) {
     
         _stationInfo = stationInfo;
@@ -194,7 +195,8 @@ NSString *keyTimedMetadata	= @"currentItem.timedMetadata";
         return;
     }
     
-    [self enablePlayerButtons];
+//    [self enablePlayerButtons];
+    self.newStation = YES;
     
     /* Если у нас уже был AVPlayerItem, то удаляем его слушателя. */
     if (self.playerItem)
@@ -209,7 +211,7 @@ NSString *keyTimedMetadata	= @"currentItem.timedMetadata";
                       forKeyPath:keyStatus
                          options:NSKeyValueObservingOptionInitial | NSKeyValueObservingOptionNew
                          context:playerItemStatusObserverContext];
-    
+
     // Создаем нового player, если еще этого не делали
     if (!self.player)
     {
@@ -292,7 +294,7 @@ NSString *keyTimedMetadata	= @"currentItem.timedMetadata";
     switch (interruptionType.unsignedIntegerValue) {
         case AVAudioSessionInterruptionTypeBegan: {
             NSLog(@"AVAudioSessionInterruptionTypeBegan");
-            self.isInterrupted = YES;
+            self.interrupted = YES;
             if ([self isPlaying]) {
                 [self.player pause];
             }
@@ -387,7 +389,7 @@ NSString *keyTimedMetadata	= @"currentItem.timedMetadata";
             case AVPlayerStatusReadyToPlay:
             {
                 NSLog(@"AVPlayerStatusReadyToPlay");
-                if (!self.isInterrupted) {
+                if (!self.isInterrupted && self.isNewStation) {
                     [self enablePlayerButtons];
                     self.trackInfo.text = NSLocalizedString(@"Getting metadata...", nil);
                     [self.player play];
@@ -398,8 +400,9 @@ NSString *keyTimedMetadata	= @"currentItem.timedMetadata";
                                                    userInfo:nil
                                                     repeats:NO];
                     self.timer = timer;
+                    self.newStation = NO;
                 }
-                self.isInterrupted = NO;
+                self.interrupted = NO;
             }
                 break;
                 
