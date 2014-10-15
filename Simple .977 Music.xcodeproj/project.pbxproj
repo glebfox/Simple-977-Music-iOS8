@@ -101,6 +101,7 @@
 		7E057EEF19DA7FCF004F5304 /* Simple .977 Music */ = {
 			isa = PBXGroup;
 			children = (
+				7EC143AD19EEAD5C00374DEA /* Resources */,
 				7E057F1619DA8037004F5304 /* App */,
 				7E057F1719DA8041004F5304 /* Model */,
 				7E057F1819DA804A004F5304 /* Views */,
@@ -160,7 +161,6 @@
 			isa = PBXGroup;
 			children = (
 				7E057EFA19DA7FCF004F5304 /* Main.storyboard */,
-				7E057EFD19DA7FCF004F5304 /* Images.xcassets */,
 			);
 			name = Views;
 			sourceTree = "<group>";
@@ -194,6 +194,14 @@
 				7E86C41E19DD1A8300BCB729 /* GG977StationsCollection.m */,
 			);
 			name = Stations;
+			sourceTree = "<group>";
+		};
+		7EC143AD19EEAD5C00374DEA /* Resources */ = {
+			isa = PBXGroup;
+			children = (
+				7E057EFD19DA7FCF004F5304 /* Images.xcassets */,
+			);
+			name = Resources;
 			sourceTree = "<group>";
 		};
 /* End PBXGroup section */
