@@ -94,6 +94,7 @@ NSString *keyTimedMetadata	= @"currentItem.timedMetadata";
                                                object:[AVAudioSession sharedInstance]];
 }
 
+// При тестах невсегда срабатывал, поэтому перенес все отписки в - (void)applicationWillTerminate:(UIApplication *)application
 //- (void)dealloc
 //{
 //    NSLog(@"dealloc");
