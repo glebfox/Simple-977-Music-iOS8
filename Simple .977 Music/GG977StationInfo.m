@@ -30,19 +30,12 @@
     return description;
 }
 
-#pragma mark NSCoding
-
-- (id)initWithCoder:(NSCoder *)decoder {
-    if ((self = [super init])) {
-        self.title = [decoder decodeObjectForKey:@"title"];
-        self.url = [decoder decodeObjectForKey:@"url"];
-    }
-    return self;
-}
-
-- (void)encodeWithCoder:(NSCoder *)encoder {
-    if (self.title) [encoder encodeObject:self.title forKey:@"title"];
-    if (self.url) [encoder encodeObject:self.url forKey:@"url"];
+- (BOOL)isEqual:(id)object {
+    if (!object) return false;
+    if (object == self) return true;
+    if ([object class] != [GG977StationInfo class]) return false;
+    GG977StationInfo *obj = (GG977StationInfo *)object;
+    return [self.title isEqualToString:obj.title] && [self.url isEqual:obj.url];
 }
 
 @end

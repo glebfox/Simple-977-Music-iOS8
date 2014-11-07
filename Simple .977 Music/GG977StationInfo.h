@@ -8,11 +8,14 @@
 
 #import <Foundation/Foundation.h>
 
-@interface GG977StationInfo : NSObject <NSCoding>
+@interface GG977StationInfo : NSObject
 
-@property NSString *title;
-@property NSURL *url;
+@property (nonatomic, strong) NSString *title;
+@property (nonatomic, strong) NSURL *url;
 
 - (id)initWithTitle:(NSString *)title url:(NSURL *)url;
+
++ (instancetype)new NS_UNAVAILABLE;
+- (instancetype)init NS_UNAVAILABLE;
 
 @end

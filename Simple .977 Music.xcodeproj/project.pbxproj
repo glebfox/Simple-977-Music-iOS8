@@ -20,6 +20,7 @@
 		7E86C41F19DD1A8300BCB729 /* GG977StationsCollection.m in Sources */ = {isa = PBXBuildFile; fileRef = 7E86C41E19DD1A8300BCB729 /* GG977StationsCollection.m */; };
 		7E86C42419DD855800BCB729 /* Localizable.strings in Resources */ = {isa = PBXBuildFile; fileRef = 7E86C42619DD855800BCB729 /* Localizable.strings */; };
 		7E9752A719DA8ABE00B215DF /* GG977PlayerViewController.m in Sources */ = {isa = PBXBuildFile; fileRef = 7E9752A619DA8ABE00B215DF /* GG977PlayerViewController.m */; };
+		7EC0878C1A0BA0E200674853 /* GG977MainViewController.m in Sources */ = {isa = PBXBuildFile; fileRef = 7EC0878B1A0BA0E200674853 /* GG977MainViewController.m */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXContainerItemProxy section */
@@ -57,6 +58,8 @@
 		7E86C42719DD855900BCB729 /* Base */ = {isa = PBXFileReference; lastKnownFileType = text.plist.strings; name = Base; path = Base.lproj/Localizable.strings; sourceTree = "<group>"; };
 		7E9752A519DA8ABE00B215DF /* GG977PlayerViewController.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = GG977PlayerViewController.h; sourceTree = "<group>"; };
 		7E9752A619DA8ABE00B215DF /* GG977PlayerViewController.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = GG977PlayerViewController.m; sourceTree = "<group>"; };
+		7EC0878A1A0BA0E200674853 /* GG977MainViewController.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = GG977MainViewController.h; sourceTree = "<group>"; };
+		7EC0878B1A0BA0E200674853 /* GG977MainViewController.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = GG977MainViewController.m; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -168,6 +171,8 @@
 		7E057F1919DA805D004F5304 /* Controllers */ = {
 			isa = PBXGroup;
 			children = (
+				7EC0878A1A0BA0E200674853 /* GG977MainViewController.h */,
+				7EC0878B1A0BA0E200674853 /* GG977MainViewController.m */,
 				7E9752A519DA8ABE00B215DF /* GG977PlayerViewController.h */,
 				7E9752A619DA8ABE00B215DF /* GG977PlayerViewController.m */,
 				7E86C41419DC1D8B00BCB729 /* GG977StationsViewController.h */,
@@ -248,6 +253,7 @@
 		7E057EE519DA7FCF004F5304 /* Project object */ = {
 			isa = PBXProject;
 			attributes = {
+				CLASSPREFIX = GG977;
 				LastUpgradeCheck = 0600;
 				ORGANIZATIONNAME = "Gleb Gorelov";
 				TargetAttributes = {
@@ -315,6 +321,7 @@
 				7E9752A719DA8ABE00B215DF /* GG977PlayerViewController.m in Sources */,
 				7E86C41619DC1D8B00BCB729 /* GG977StationsViewController.m in Sources */,
 				7E86C41919DC205A00BCB729 /* GG977StationInfo.m in Sources */,
+				7EC0878C1A0BA0E200674853 /* GG977MainViewController.m in Sources */,
 				7E057EF619DA7FCF004F5304 /* AppDelegate.m in Sources */,
 				7E057EF319DA7FCF004F5304 /* main.m in Sources */,
 			);

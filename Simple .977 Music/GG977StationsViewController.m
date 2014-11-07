@@ -20,6 +20,9 @@
 
 - (void)viewDidLoad {
     [super viewDidLoad];
+    
+#warning test
+    
 }
 
 - (void)didReceiveMemoryWarning {
@@ -38,7 +41,7 @@
 - (NSInteger)tableView:(UITableView *)tableView numberOfRowsInSection:(NSInteger)section
 {
     // Return the number of rows in the section.
-    return self.itemsToDisplay.count;
+    return [[GG977StationsCollection sharedInstance] allStations].count;
 }
 
 - (UITableViewCell *)tableView:(UITableView *)tableView cellForRowAtIndexPath:(NSIndexPath *)indexPath
@@ -47,7 +50,7 @@
     UITableViewCell *cell = [tableView dequeueReusableCellWithIdentifier:CellIdentider forIndexPath:indexPath];
     
     // Configure the cell...
-    cell.textLabel.text = [self.itemsToDisplay[indexPath.row] title];
+    cell.textLabel.text = [[[GG977StationsCollection sharedInstance] allStations][indexPath.row] title];
     
     return cell;
 }
@@ -65,7 +68,7 @@
         controller = navController.topViewController;
         if ([controller class] == [GG977PlayerViewController class]) {
             GG977PlayerViewController *player = (GG977PlayerViewController *)controller;
-            [player setStationInfo:self.itemsToDisplay[indexPath.row]];
+            [player setStationInfo:[[GG977StationsCollection sharedInstance] allStations][indexPath.row]];
         }
     }
     
@@ -79,16 +82,5 @@
                         }
                     }];
 }
-
-
-/*
-#pragma mark - Navigation
-
-// In a storyboard-based application, you will often want to do a little preparation before navigation
-- (void)prepareForSegue:(UIStoryboardSegue *)segue sender:(id)sender {
-    // Get the new view controller using [segue destinationViewController].
-    // Pass the selected object to the new view controller.
-}
-*/
 
 @end

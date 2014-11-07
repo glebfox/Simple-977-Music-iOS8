@@ -10,7 +10,8 @@
 
 @interface GG977StationsCollection ()
 
-@property(nonatomic, strong) NSDictionary *stations;
+@property (nonatomic, strong) NSDictionary *stations;
+@property (nonatomic, strong) NSArray *allStations;
 
 @end
 
@@ -41,24 +42,35 @@
 
 - (GG977StationInfo *)stationByName:(NSString *)name
 {
-    NSString *urlString = self.stations[name];
-    if (urlString != nil) {
-        GG977StationInfo *info = [[GG977StationInfo alloc] initWithTitle:name url:[NSURL URLWithString:urlString]];
-        return info;
+    if (!name) return nil;
+    
+//    NSString *urlString = self.stations[name];
+//    if (urlString != nil) {
+//        GG977StationInfo *info = [[GG977StationInfo alloc] initWithTitle:name url:[NSURL URLWithString:urlString]];
+//        return info;
+//    }
+//    return nil;
+    
+    for (GG977StationInfo *station in self.allStations) {
+        if ([station.title isEqualToString:name]) return station;
     }
+    
     return nil;
 }
 
 - (NSArray *)allStations
 {
-    NSArray *keys = [self.stations allKeys];
-    NSMutableArray *stations = [NSMutableArray new];
-    
-    for (NSString *key in keys) {
-        [stations addObject:[[GG977StationInfo alloc] initWithTitle:key url:[NSURL URLWithString:self.stations[key]]]];
+    if (!_allStations) {
+        NSArray *keys = [self.stations allKeys];
+        NSMutableArray *stations = [NSMutableArray new];
+        
+        for (NSString *key in keys) {
+            [stations addObject:[[GG977StationInfo alloc] initWithTitle:key url:[NSURL URLWithString:self.stations[key]]]];
+        }
+        
+        _allStations = [NSArray arrayWithArray:stations];
     }
-    
-    return [NSArray arrayWithArray:stations];
+    return _allStations;
 }
 
 

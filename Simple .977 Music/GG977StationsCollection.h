@@ -11,9 +11,12 @@
 
 @interface GG977StationsCollection : NSObject
 
+@property (nonatomic, strong, readonly) NSArray *allStations;
+
 + (id)sharedInstance;
 
 - (GG977StationInfo *)stationByName:(NSString *)name;
-- (NSArray *)allStations;
+//- (NSArray *)allStations;
+
 
 @end

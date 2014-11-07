@@ -11,6 +11,6 @@
 
 @interface GG977StationsViewController : UIViewController <UITableViewDelegate, UITableViewDataSource>
 
-@property (strong, nonatomic) NSArray *itemsToDisplay;
+//@property (strong, nonatomic) NSArray *itemsToDisplay;
 
 @end

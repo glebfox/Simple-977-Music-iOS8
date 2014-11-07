@@ -47,16 +47,22 @@ NSString *keyTimedMetadata	= @"currentItem.timedMetadata";
 - (void)viewDidLoad {
     [super viewDidLoad];
 //    NSLog(@"viewDidLoad");
-    UISlider *volumeViewSlider;
-    // Find the volume view slider
-    for (UIView *view in [self.volumeView subviews]){
-        if ([[[view class] description] isEqualToString:@"MPVolumeSlider"]) {
-            volumeViewSlider = (UISlider *) view;
-        }
-    }
+//    UISlider *volumeViewSlider;
+//    // Find the volume view slider
+//    for (UIView *view in [self.volumeView subviews]){
+//        if ([[[view class] description] isEqualToString:@"MPVolumeSlider"]) {
+//            volumeViewSlider = (UISlider *) view;
+//        }
+//    }
     
-    [volumeViewSlider setMinimumValueImage:[UIImage imageNamed:@"volume_down.png"]];
-    [volumeViewSlider setMaximumValueImage:[UIImage imageNamed:@"volume_up.png"]];
+//    UIImage *minImage = [UIImage imageNamed:@"volume_down.png"];
+//    UIImage *maxImage = [UIImage imageNamed:@"volume_up.png"];
+//
+//    minImage = [minImage resizableImageWithCapInsets:UIEdgeInsetsMake(0, 20, 0, 0)];
+//    maxImage = [maxImage resizableImageWithCapInsets:UIEdgeInsetsMake(0, 0, 0, 20)];
+//    
+//    [self.volumeView setMinimumVolumeSliderImage:minImage forState:UIControlStateNormal];
+//    [self.volumeView setMaximumVolumeSliderImage:maxImage forState:UIControlStateNormal];
     
     [self disablePlayerButtons];
     [self clearLabels];
@@ -92,9 +98,12 @@ NSString *keyTimedMetadata	= @"currentItem.timedMetadata";
                                              selector:@selector(handleAudioSessionInterruption:)
                                                  name:AVAudioSessionInterruptionNotification
                                                object:[AVAudioSession sharedInstance]];
+    
+    
+    #warning test
 }
 
-// При тестах невсегда срабатывал, поэтому перенес все отписки в - (void)applicationWillTerminate:(UIApplication *)application
+// При тестах не всегда срабатывал, поэтому перенес все отписки в - (void)applicationWillTerminate:(UIApplication *)application
 //- (void)dealloc
 //{
 //    NSLog(@"dealloc");
@@ -136,7 +145,7 @@ NSString *keyTimedMetadata	= @"currentItem.timedMetadata";
 - (void)setStationInfo:(GG977StationInfo *)stationInfo
 {
     NSLog(@"setStationInfo");
-    if (_stationInfo != stationInfo) {
+    if (![_stationInfo isEqual:stationInfo]) {
     
         _stationInfo = stationInfo;
     
