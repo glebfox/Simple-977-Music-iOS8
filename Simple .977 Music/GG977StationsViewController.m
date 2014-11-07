@@ -8,7 +8,6 @@
 
 #import "GG977StationsViewController.h"
 #import "GG977StationsCollection.h"
-#import "GG977PlayerViewController.h"
 
 @interface GG977StationsViewController ()
 
@@ -19,10 +18,7 @@
 @implementation GG977StationsViewController
 
 - (void)viewDidLoad {
-    [super viewDidLoad];
-    
-#warning test
-    
+    [super viewDidLoad];    
 }
 
 - (void)didReceiveMemoryWarning {
@@ -58,29 +54,14 @@
 #pragma mark - Table view delegate
 
 - (void)tableView:(UITableView *)tableView didSelectRowAtIndexPath:(NSIndexPath *)indexPath
-{
-    UIView * fromView = self.tabBarController.selectedViewController.view;
-    UIView * toView = [[self.tabBarController.viewControllers objectAtIndex:1] view];
-    
-    UIViewController *controller = [self.tabBarController.viewControllers objectAtIndex:1];
-    if ([controller class] == [UINavigationController class]) {
-        UINavigationController *navController = (UINavigationController *)controller;
-        controller = navController.topViewController;
-        if ([controller class] == [GG977PlayerViewController class]) {
-            GG977PlayerViewController *player = (GG977PlayerViewController *)controller;
-            [player setStationInfo:[[GG977StationsCollection sharedInstance] allStations][indexPath.row]];
-        }
+{    
+    if ([self.delegate respondsToSelector:@selector(setPlayerStationInfo:)]) {
+        [self.delegate setPlayerStationInfo:[[GG977StationsCollection sharedInstance] allStations][indexPath.row]];
     }
     
-    [UIView transitionFromView:fromView
-                        toView:toView
-                      duration:0.5
-                       options: UIViewAnimationOptionTransitionFlipFromRight
-                    completion:^(BOOL finished) {
-                        if (finished) {
-                            self.tabBarController.selectedIndex = 1;
-                        }
-                    }];
+    if ([self.delegate respondsToSelector:@selector(transitionFromView:duration:options:)]) {
+        [self.delegate transitionFromView:self.view duration:0.5 options:UIViewAnimationOptionTransitionFlipFromRight];
+    }
 }
 
 @end

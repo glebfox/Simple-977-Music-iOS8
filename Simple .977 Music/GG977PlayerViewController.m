@@ -44,23 +44,63 @@ NSString *keyTimedMetadata	= @"currentItem.timedMetadata";
 
 @implementation GG977PlayerViewController
 
+- (id)init {
+    if ((self = [super init])) {
+        [self gg977PlayerViewControllerInit];
+    }
+    return self;
+}
+
+- (id)initWithCoder:(NSCoder *)aDecoder {
+    if ((self = [super initWithCoder:aDecoder])) {
+        [self gg977PlayerViewControllerInit];
+    }
+    return self;
+}
+
+- (id)initWithNibName:(NSString *)nibNameOrNil bundle:(NSBundle *)nibBundleOrNil {
+    if ((self = [super initWithNibName:nibNameOrNil bundle:nibBundleOrNil])) {
+        [self gg977PlayerViewControllerInit];
+    }
+    return self;
+}
+
+- (void)gg977PlayerViewControllerInit {
+    // Turn on remote control event delivery
+//    [[UIApplication sharedApplication] beginReceivingRemoteControlEvents];
+    
+    // Set itself as the first responder
+    [self becomeFirstResponder];
+    
+    
+    
+    [[NSNotificationCenter defaultCenter] addObserver:self
+                                             selector:@selector(handleAudioSessionInterruption:)
+                                                 name:AVAudioSessionInterruptionNotification
+                                               object:[AVAudioSession sharedInstance]];
+}
+
 - (void)viewDidLoad {
     [super viewDidLoad];
-//    NSLog(@"viewDidLoad");
+    NSLog(@"GG977PlayerViewController - viewDidLoad");
 //    UISlider *volumeViewSlider;
+////    MPVolumeSlider
 //    // Find the volume view slider
 //    for (UIView *view in [self.volumeView subviews]){
 //        if ([[[view class] description] isEqualToString:@"MPVolumeSlider"]) {
 //            volumeViewSlider = (UISlider *) view;
 //        }
 //    }
+//    [volumeViewSlider setMinimumValueImage:[UIImage imageNamed:@"volume_down.png"]];
+//    [volumeViewSlider setMaximumValueImage:[UIImage imageNamed:@"volume_up.png"]];
+
+//    [volumeViewSlider setMinimumTrackImage:[[UIImage imageNamed:@"list_u.png"] stretchableImageWithLeftCapWidth:10.0f topCapHeight:0.0f] forState:UIControlStateNormal];
+//    [volumeViewSlider setMaximumTrackImage:[[UIImage imageNamed:@"list.png"] stretchableImageWithLeftCapWidth:10.0f topCapHeight:0.0f] forState:UIControlStateNormal];
+
     
-//    UIImage *minImage = [UIImage imageNamed:@"volume_down.png"];
-//    UIImage *maxImage = [UIImage imageNamed:@"volume_up.png"];
-//
-//    minImage = [minImage resizableImageWithCapInsets:UIEdgeInsetsMake(0, 20, 0, 0)];
-//    maxImage = [maxImage resizableImageWithCapInsets:UIEdgeInsetsMake(0, 0, 0, 20)];
-//    
+//    UIImage *minImage = [[UIImage imageNamed:@"list_u.png"] stretchableImageWithLeftCapWidth:10.0f topCapHeight:0.0f];
+//    UIImage *maxImage = [[UIImage imageNamed:@"list.png"] stretchableImageWithLeftCapWidth:10.0f topCapHeight:0.0f];
+
 //    [self.volumeView setMinimumVolumeSliderImage:minImage forState:UIControlStateNormal];
 //    [self.volumeView setMaximumVolumeSliderImage:maxImage forState:UIControlStateNormal];
     
@@ -71,12 +111,6 @@ NSString *keyTimedMetadata	= @"currentItem.timedMetadata";
         self.stationTitle.text = self.stationInfo.title;
         self.trackInfo.text = NSLocalizedString(@"Connecting...", nil);
     }
-    
-    // Turn on remote control event delivery
-    [[UIApplication sharedApplication] beginReceivingRemoteControlEvents];
-    
-    // Set itself as the first responder
-    [self becomeFirstResponder];
     
     // Apple recommends that you explicitly activate your session—typically as part of your app’s viewDidLoad method, and set preferred hardware values prior to activating your audio session.
     NSError *activationError = nil;
@@ -93,30 +127,22 @@ NSString *keyTimedMetadata	= @"currentItem.timedMetadata";
     if (!success) {
         NSLog(@"%@", setCategoryError);
     }
-    
-    [[NSNotificationCenter defaultCenter] addObserver:self
-                                             selector:@selector(handleAudioSessionInterruption:)
-                                                 name:AVAudioSessionInterruptionNotification
-                                               object:[AVAudioSession sharedInstance]];
-    
-    
-    #warning test
 }
 
-// При тестах не всегда срабатывал, поэтому перенес все отписки в - (void)applicationWillTerminate:(UIApplication *)application
-//- (void)dealloc
-//{
-//    NSLog(@"dealloc");
-//    [[NSNotificationCenter defaultCenter] removeObserver:self
-//                                                    name:AVAudioSessionInterruptionNotification
-//                                                  object:[AVAudioSession sharedInstance]];
-//
-//    // Turn off remote control event delivery
+// При тестах не срабатывал, поэтому перенес все отписки в - (void)applicationWillTerminate:(UIApplication *)application
+- (void)dealloc
+{
+    NSLog(@"dealloc");
+    [[NSNotificationCenter defaultCenter] removeObserver:self
+                                                    name:AVAudioSessionInterruptionNotification
+                                                  object:[AVAudioSession sharedInstance]];
+
+    // Turn off remote control event delivery
 //    [[UIApplication sharedApplication] endReceivingRemoteControlEvents];
-//
-//    // Resign as first responder
-//    [self resignFirstResponder];
-//}
+
+    // Resign as first responder
+    [self resignFirstResponder];
+}
 
 - (void)didReceiveMemoryWarning {
     [super didReceiveMemoryWarning];

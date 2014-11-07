@@ -7,10 +7,17 @@
 //
 
 #import <UIKit/UIKit.h>
+#import "GG977StationInfo.h"
 
+@protocol GG977StationsViewControllerDelegate <NSObject>
+
+- (void)setPlayerStationInfo:(GG977StationInfo *)info;
+- (void)transitionFromView:(UIView *)fromView duration:(NSTimeInterval)duration options:(UIViewAnimationOptions)options;
+
+@end
 
 @interface GG977StationsViewController : UIViewController <UITableViewDelegate, UITableViewDataSource>
 
-//@property (strong, nonatomic) NSArray *itemsToDisplay;
+@property (weak, nonatomic) id<GG977StationsViewControllerDelegate> delegate;
 
 @end
