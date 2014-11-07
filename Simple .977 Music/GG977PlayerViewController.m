@@ -72,12 +72,19 @@ NSString *keyTimedMetadata	= @"currentItem.timedMetadata";
     // Set itself as the first responder
     [self becomeFirstResponder];
     
-    
-    
     [[NSNotificationCenter defaultCenter] addObserver:self
                                              selector:@selector(handleAudioSessionInterruption:)
                                                  name:AVAudioSessionInterruptionNotification
                                                object:[AVAudioSession sharedInstance]];
+    
+    NSError *setCategoryError = nil;
+    BOOL success = [[AVAudioSession sharedInstance]
+               setCategory: AVAudioSessionCategoryPlayback
+               error: &setCategoryError];
+    
+    if (!success) {
+        NSLog(@"%@", setCategoryError);
+    }
 }
 
 - (void)viewDidLoad {
@@ -117,15 +124,6 @@ NSString *keyTimedMetadata	= @"currentItem.timedMetadata";
     BOOL success = [[AVAudioSession sharedInstance] setActive: YES error: &activationError];
     if (!success) {
         NSLog(@"%@", activationError);
-    }
-    
-    NSError *setCategoryError = nil;
-    success = [[AVAudioSession sharedInstance]
-                    setCategory: AVAudioSessionCategoryPlayback
-                    error: &setCategoryError];
-    
-    if (!success) {
-        NSLog(@"%@", setCategoryError);
     }
 }
 
@@ -172,7 +170,12 @@ NSString *keyTimedMetadata	= @"currentItem.timedMetadata";
 {
     NSLog(@"setStationInfo");
     if (![_stationInfo isEqual:stationInfo]) {
-    
+        
+        if ([self.timer isValid]) {
+            [self.timer invalidate];
+            self.timer = nil;
+        }
+        
         _stationInfo = stationInfo;
     
         self.stationTitle.text = _stationInfo.title;
@@ -183,7 +186,7 @@ NSString *keyTimedMetadata	= @"currentItem.timedMetadata";
         AVURLAsset *asset = [AVURLAsset URLAssetWithURL:_stationInfo.url options:nil];
     
         NSArray *requestedKeys = @[keyTracks, keyPlayable];
-    
+        
         // Загружаем ключи, которые еще не были загруженны.
         [asset loadValuesAsynchronouslyForKeys:requestedKeys completionHandler:
          ^{
@@ -389,6 +392,8 @@ NSString *keyTimedMetadata	= @"currentItem.timedMetadata";
 
 -(void)assetFailedToPrepareForPlayback:(NSError *)error
 {
+    self.stationInfo = nil;
+    
     [self disablePlayerButtons];
     [self clearLabels];
     
@@ -430,12 +435,12 @@ NSString *keyTimedMetadata	= @"currentItem.timedMetadata";
                     self.trackInfo.text = NSLocalizedString(@"Getting metadata...", nil);
                     [self.player play];
                     
-                    NSTimer *timer = [NSTimer scheduledTimerWithTimeInterval:10.0
+                    self.timer = [NSTimer scheduledTimerWithTimeInterval:10.0
                                                      target:self
                                                    selector:@selector(timerFired:)
                                                    userInfo:nil
                                                     repeats:NO];
-                    self.timer = timer;
+
                     self.newStation = NO;
                 }
                 self.interrupted = NO;

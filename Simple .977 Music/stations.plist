@@ -3,9 +3,9 @@
 <plist version="1.0">
 <dict>
 	<key>80s</key>
-	<string>http://977music.com/itunes/80s.pls</string>
+	<string>http://www.977music.com/itunes/80s.pls</string>
 	<key>Hitz</key>
-	<string>http://977music.com/itunes/hitz.pls</string>
+	<string>http://www.977music.com/itunes/hitz.pls</string>
 	<key>Oldies</key>
 	<string>http://www.977music.com/itunes/oldies.pls</string>
 	<key>Classic Rock</key>
