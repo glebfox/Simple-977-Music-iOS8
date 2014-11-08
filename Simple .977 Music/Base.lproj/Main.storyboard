@@ -52,7 +52,7 @@
                                         </connections>
                                     </button>
                                     <view contentMode="scaleToFill" translatesAutoresizingMaskIntoConstraints="NO" id="Ora-zf-vYW" customClass="MPVolumeView">
-                                        <rect key="frame" x="8" y="140" width="304" height="20"/>
+                                        <rect key="frame" x="29" y="140" width="253" height="20"/>
                                         <color key="backgroundColor" white="0.0" alpha="0.0" colorSpace="calibratedWhite"/>
                                         <constraints>
                                             <constraint firstAttribute="height" constant="20" id="0CG-t6-n5F"/>
@@ -70,18 +70,28 @@
                                         <color key="textColor" cocoaTouchSystemColor="darkTextColor"/>
                                         <nil key="highlightedColor"/>
                                     </label>
+                                    <imageView userInteractionEnabled="NO" contentMode="scaleAspectFit" horizontalHuggingPriority="251" verticalHuggingPriority="251" image="volume_down" translatesAutoresizingMaskIntoConstraints="NO" id="kdj-Uo-Q6H">
+                                        <rect key="frame" x="8" y="141" width="13" height="17"/>
+                                    </imageView>
+                                    <imageView userInteractionEnabled="NO" contentMode="scaleAspectFit" horizontalHuggingPriority="251" verticalHuggingPriority="251" image="volume_up" translatesAutoresizingMaskIntoConstraints="NO" id="ad6-sh-ehB">
+                                        <rect key="frame" x="290" y="141" width="22" height="17"/>
+                                    </imageView>
                                 </subviews>
                                 <color key="backgroundColor" red="0.93725490196078431" green="0.93725490196078431" blue="0.95686274509803926" alpha="0.90000000000000002" colorSpace="calibratedRGB"/>
                                 <constraints>
                                     <constraint firstItem="M0A-L0-UaH" firstAttribute="top" secondItem="Uty-tr-5Uk" secondAttribute="bottom" constant="8" id="1Di-UA-uBa"/>
+                                    <constraint firstItem="Ora-zf-vYW" firstAttribute="leading" secondItem="kdj-Uo-Q6H" secondAttribute="trailing" constant="8" id="2fS-L7-3dE"/>
                                     <constraint firstItem="Uty-tr-5Uk" firstAttribute="leading" secondItem="X2b-eJ-mhv" secondAttribute="leading" constant="8" id="3uT-Ys-42M"/>
-                                    <constraint firstItem="Ora-zf-vYW" firstAttribute="leading" secondItem="X2b-eJ-mhv" secondAttribute="leading" constant="8" id="BV4-4R-JMU"/>
                                     <constraint firstItem="Ora-zf-vYW" firstAttribute="top" secondItem="WRl-td-K3M" secondAttribute="bottom" constant="20" id="Bk8-kJ-qxD"/>
-                                    <constraint firstAttribute="trailing" secondItem="Ora-zf-vYW" secondAttribute="trailing" constant="8" id="NFW-tI-Dba"/>
+                                    <constraint firstItem="ad6-sh-ehB" firstAttribute="leading" secondItem="Ora-zf-vYW" secondAttribute="trailing" constant="8" id="HZ3-2t-8WH"/>
+                                    <constraint firstAttribute="trailing" secondItem="ad6-sh-ehB" secondAttribute="trailing" constant="8" id="Z35-fL-yIi"/>
+                                    <constraint firstAttribute="bottom" secondItem="kdj-Uo-Q6H" secondAttribute="bottom" constant="22" id="bdL-No-it7"/>
                                     <constraint firstItem="M0A-L0-UaH" firstAttribute="leading" secondItem="X2b-eJ-mhv" secondAttribute="leading" constant="8" id="dBf-HC-6Lj"/>
+                                    <constraint firstItem="kdj-Uo-Q6H" firstAttribute="leading" secondItem="X2b-eJ-mhv" secondAttribute="leading" constant="8" id="e1u-WI-PWI"/>
                                     <constraint firstAttribute="bottom" secondItem="Ora-zf-vYW" secondAttribute="bottom" constant="20" id="g2v-eb-yMS"/>
                                     <constraint firstAttribute="height" constant="180" id="gEp-VQ-tUw"/>
                                     <constraint firstItem="WRl-td-K3M" firstAttribute="top" secondItem="M0A-L0-UaH" secondAttribute="bottom" constant="20" id="jlu-lY-d2h"/>
+                                    <constraint firstAttribute="bottom" secondItem="ad6-sh-ehB" secondAttribute="bottom" constant="22" id="lYC-mX-TC0"/>
                                     <constraint firstAttribute="trailing" secondItem="M0A-L0-UaH" secondAttribute="trailing" constant="8" id="mzs-af-jMR"/>
                                     <constraint firstAttribute="centerX" secondItem="WRl-td-K3M" secondAttribute="centerX" id="nXy-OV-vvU"/>
                                     <constraint firstAttribute="trailing" secondItem="Uty-tr-5Uk" secondAttribute="trailing" constant="8" id="yCX-Zv-kfs"/>
@@ -120,7 +130,7 @@
                 </viewController>
                 <placeholder placeholderIdentifier="IBFirstResponder" id="WE8-Ba-R0k" userLabel="First Responder" sceneMemberID="firstResponder"/>
             </objects>
-            <point key="canvasLocation" x="-397.86666666666667" y="495.10666666666668"/>
+            <point key="canvasLocation" x="-398" y="495"/>
         </scene>
         <!--.977 Music-->
         <scene sceneID="lSk-dm-RjA">
@@ -240,6 +250,8 @@
         <image name="list" width="25" height="25"/>
         <image name="now_playing" width="25" height="25"/>
         <image name="play" width="22" height="22"/>
+        <image name="volume_down" width="13" height="17"/>
+        <image name="volume_up" width="22" height="17"/>
     </resources>
     <simulatedMetricsContainer key="defaultSimulatedMetrics">
         <simulatedStatusBarMetrics key="statusBar"/>

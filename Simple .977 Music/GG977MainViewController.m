@@ -82,15 +82,24 @@
 }
 
 - (void)transitionFromView:(UIView *)fromView duration:(NSTimeInterval)duration options:(UIViewAnimationOptions)options {
-    [UIView transitionFromView:fromView
-                        toView:self.playerViewController.view
-                      duration:duration
-                       options: options
-                    completion:^(BOOL finished) {
-                        if (finished) {
-                            self.selectedIndex = 1;
-                        }
-                    }];
+//    [UIView transitionFromView:fromView
+//                        toView:self.playerViewController.view
+//                      duration:duration
+//                       options: options
+//                    completion:^(BOOL finished) {
+//                        if (finished) {
+//                            self.selectedIndex = 1;
+//                        }
+//                    }];
+    
+    CATransition *transition = [CATransition animation];
+    transition.type = kCATransitionFade;
+    transition.duration = duration;
+    transition.timingFunction = [CAMediaTimingFunction functionWithName:kCAMediaTimingFunctionEaseOut];
+    
+    self.selectedIndex = 1;
+    
+    [self.view.layer addAnimation:transition forKey:nil];
 }
 
 @end

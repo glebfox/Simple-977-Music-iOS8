@@ -58,9 +58,9 @@
     if ([self.delegate respondsToSelector:@selector(setPlayerStationInfo:)]) {
         [self.delegate setPlayerStationInfo:[[GG977StationsCollection sharedInstance] allStations][indexPath.row]];
     }
-    
+
     if ([self.delegate respondsToSelector:@selector(transitionFromView:duration:options:)]) {
-        [self.delegate transitionFromView:self.view duration:0.5 options:UIViewAnimationOptionTransitionFlipFromRight];
+        [self.delegate transitionFromView:self.view duration:1 options:UIViewAnimationOptionTransitionFlipFromRight];
     }
 }
 

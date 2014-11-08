@@ -168,7 +168,7 @@ NSString *keyTimedMetadata	= @"currentItem.timedMetadata";
 
 - (void)setStationInfo:(GG977StationInfo *)stationInfo
 {
-    NSLog(@"setStationInfo");
+//    NSLog(@"setStationInfo");
     if (![_stationInfo isEqual:stationInfo]) {
         
         if ([self.timer isValid]) {
@@ -181,7 +181,7 @@ NSString *keyTimedMetadata	= @"currentItem.timedMetadata";
         self.stationTitle.text = _stationInfo.title;
         self.trackInfo.text = NSLocalizedString(@"Connecting...", nil);
         self.artistInfo.text = @"";
-    
+        
         // Создаем asset для заданного url. Загружаем значения для ключей "tracks", "playable".
         AVURLAsset *asset = [AVURLAsset URLAssetWithURL:_stationInfo.url options:nil];
     
