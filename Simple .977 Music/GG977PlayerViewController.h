@@ -8,8 +8,9 @@
 
 #import <UIKit/UIKit.h>
 #import "GG977StationInfo.h"
+#import "AppDelegate.h"
 
-@interface GG977PlayerViewController : UIViewController
+@interface GG977PlayerViewController : UIViewController <AppRemoteControlDelegate>
 
 @property (strong, nonatomic) GG977StationInfo *stationInfo;
 

@@ -10,6 +10,7 @@
 #import <AVFoundation/AVFoundation.h>
 #import <MediaPlayer/MediaPlayer.h>
 #import <MediaPlayer/MPNowPlayingInfoCenter.h>
+#import "AppDelegate.h"
 
 // Переменные хранящие контекст наблюдателя
 static void *timedMetadataObserverContext = &timedMetadataObserverContext;
@@ -69,9 +70,6 @@ NSString *keyTimedMetadata	= @"currentItem.timedMetadata";
     // Turn on remote control event delivery
 //    [[UIApplication sharedApplication] beginReceivingRemoteControlEvents];
     
-    // Set itself as the first responder
-//    [self becomeFirstResponder];
-    
     [[NSNotificationCenter defaultCenter] addObserver:self
                                              selector:@selector(handleAudioSessionInterruption:)
                                                  name:AVAudioSessionInterruptionNotification
@@ -85,11 +83,14 @@ NSString *keyTimedMetadata	= @"currentItem.timedMetadata";
     if (!success) {
         NSLog(@"%@", setCategoryError);
     }
+    
+    AppDelegate *appDelegate = (AppDelegate *)[[UIApplication sharedApplication] delegate];
+    appDelegate.delegate = self;
 }
 
 - (void)viewDidLoad {
     [super viewDidLoad];
-    NSLog(@"GG977PlayerViewController - viewDidLoad");
+//    NSLog(@"GG977PlayerViewController - viewDidLoad");
     
     [self disablePlayerButtons];
     [self clearLabels];
@@ -110,13 +111,10 @@ NSString *keyTimedMetadata	= @"currentItem.timedMetadata";
 // При тестах не срабатывал, поэтому перенес все отписки в - (void)applicationWillTerminate:(UIApplication *)application
 - (void)dealloc
 {
-    NSLog(@"dealloc");
+//    NSLog(@"dealloc");
     [[NSNotificationCenter defaultCenter] removeObserver:self
                                                     name:AVAudioSessionInterruptionNotification
                                                   object:[AVAudioSession sharedInstance]];
-
-    // Turn off remote control event delivery
-//    [[UIApplication sharedApplication] endReceivingRemoteControlEvents];
 }
 
 - (void)didReceiveMemoryWarning {
@@ -124,8 +122,8 @@ NSString *keyTimedMetadata	= @"currentItem.timedMetadata";
     // Dispose of any resources that can be recreated.
 }
 
-- (void)remoteControlReceivedWithEvent:(UIEvent *)receivedEvent {
-//    NSLog(@"remoteControlReceivedWithEvent");
+- (void)applicationReceivedRemoteControlWithEvent:(UIEvent *)receivedEvent {
+//    NSLog(@"player - remoteControlReceivedWithEvent");
     if (receivedEvent.type == UIEventTypeRemoteControl) {
         switch (receivedEvent.subtype) {
             case UIEventSubtypeRemoteControlPlay:
@@ -139,7 +137,6 @@ NSString *keyTimedMetadata	= @"currentItem.timedMetadata";
         }
     }
 }
-
 
 #pragma mark - Player
 
@@ -156,8 +153,8 @@ NSString *keyTimedMetadata	= @"currentItem.timedMetadata";
         _stationInfo = stationInfo;
     
         self.stationTitle.text = _stationInfo.title;
-        self.trackInfo.text = NSLocalizedString(@"Connecting...", nil);
         self.artistInfo.text = @"";
+        self.trackInfo.text = NSLocalizedString(@"Connecting...", nil);
         
         // Создаем asset для заданного url. Загружаем значения для ключей "tracks", "playable".
         AVURLAsset *asset = [AVURLAsset URLAssetWithURL:_stationInfo.url options:nil];
@@ -305,18 +302,18 @@ NSString *keyTimedMetadata	= @"currentItem.timedMetadata";
 {
     NSNumber *interruptionType = [[notification userInfo] objectForKey:AVAudioSessionInterruptionTypeKey];
 //    NSNumber *interruptionOption = [[notification userInfo] objectForKey:AVAudioSessionInterruptionOptionKey];
-    NSLog(@"interruptionType - %lu", (unsigned long)interruptionType.unsignedIntegerValue);
+//    NSLog(@"interruptionType - %lu", (unsigned long)interruptionType.unsignedIntegerValue);
     
     switch (interruptionType.unsignedIntegerValue) {
         case AVAudioSessionInterruptionTypeBegan: {
-            NSLog(@"AVAudioSessionInterruptionTypeBegan");
+//            NSLog(@"AVAudioSessionInterruptionTypeBegan");
             self.interrupted = YES;
             if ([self isPlaying]) {
                 [self.player pause];
             }
         } break;
         case AVAudioSessionInterruptionTypeEnded: {
-            NSLog(@"AVAudioSessionInterruptionTypeEnded");
+//            NSLog(@"AVAudioSessionInterruptionTypeEnded");
 //            [self.player play];
         } break;
         default:
@@ -343,15 +340,7 @@ NSString *keyTimedMetadata	= @"currentItem.timedMetadata";
             self.artistInfo.text = @"";
         }
         
-        Class playingInfoCenter = NSClassFromString(@"MPNowPlayingInfoCenter");
-        
-        if (playingInfoCenter) {
-            NSMutableDictionary *songInfo = [[NSMutableDictionary alloc] init];
-            
-            [songInfo setObject:self.trackInfo.text forKey:MPMediaItemPropertyTitle];
-            [songInfo setObject:self.artistInfo.text forKey:MPMediaItemPropertyArtist];
-            [[MPNowPlayingInfoCenter defaultCenter] setNowPlayingInfo:songInfo];
-        }
+        [self setInfoCenter];
     }
 }
 
@@ -406,7 +395,7 @@ NSString *keyTimedMetadata	= @"currentItem.timedMetadata";
             // AVPlayerItem готов к проигрыванию
             case AVPlayerStatusReadyToPlay:
             {
-                NSLog(@"AVPlayerStatusReadyToPlay");
+//                NSLog(@"AVPlayerStatusReadyToPlay");
                 if (!self.isInterrupted && self.isNewStation) {
                     [self enablePlayerButtons];
                     self.trackInfo.text = NSLocalizedString(@"Getting metadata...", nil);
@@ -478,14 +467,16 @@ NSString *keyTimedMetadata	= @"currentItem.timedMetadata";
     self.artistInfo.text = @"";
     self.trackInfo.text = NSLocalizedString(@"No metadata", nil);
     
+    [self setInfoCenter];
+}
+
+- (void)setInfoCenter {
     Class playingInfoCenter = NSClassFromString(@"MPNowPlayingInfoCenter");
     
     if (playingInfoCenter) {
-        NSMutableDictionary *songInfo = [[NSMutableDictionary alloc] init];
-        
-        [songInfo setObject:self.trackInfo.text forKey:MPMediaItemPropertyTitle];
-        [songInfo setObject:self.artistInfo.text forKey:MPMediaItemPropertyArtist];
-        [[MPNowPlayingInfoCenter defaultCenter] setNowPlayingInfo:songInfo];
+        [[MPNowPlayingInfoCenter defaultCenter] setNowPlayingInfo:
+         @{ MPMediaItemPropertyTitle: self.trackInfo.text,
+            MPMediaItemPropertyArtist : self.artistInfo.text }];
     }
 }
 

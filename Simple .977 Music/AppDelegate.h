@@ -8,10 +8,16 @@
 
 #import <UIKit/UIKit.h>
 
+@protocol AppRemoteControlDelegate <NSObject>
+
+- (void)applicationReceivedRemoteControlWithEvent:(UIEvent *)receivedEvent;
+
+@end
+
 @interface AppDelegate : UIResponder <UIApplicationDelegate>
 
 @property (strong, nonatomic) UIWindow *window;
-
+@property (nonatomic, weak) id<AppRemoteControlDelegate> delegate;
 
 @end
 

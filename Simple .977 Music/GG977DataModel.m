@@ -11,23 +11,11 @@
 
 @interface GG977DataModel ()
 
-//@property (nonatomic, strong) NSDictionary *stations;
 @property (nonatomic, strong) NSArray *allStations;
 
 @end
 
 @implementation GG977DataModel
-
-//+ (id)sharedInstance
-//{
-//    static GG977DataModel *sharedInstance = nil;
-//    static dispatch_once_t onceToken;
-//    dispatch_once(&onceToken, ^{
-//        sharedInstance = [self new];
-//    });
-//    
-//    return sharedInstance;
-//}
 
 - (id)init
 {
@@ -43,44 +31,8 @@
         }
         
         _allStations = [NSArray arrayWithArray:stations];
-
-        
     }
     return self;
 }
-
-//- (GG977StationInfo *)stationByName:(NSString *)name
-//{
-//    if (!name) return nil;
-//    
-////    NSString *urlString = self.stations[name];
-////    if (urlString != nil) {
-////        GG977StationInfo *info = [[GG977StationInfo alloc] initWithTitle:name url:[NSURL URLWithString:urlString]];
-////        return info;
-////    }
-////    return nil;
-//    
-//    for (GG977StationInfo *station in self.allStations) {
-//        if ([station.title isEqualToString:name]) return station;
-//    }
-//    
-//    return nil;
-//}
-
-//- (NSArray *)allStations
-//{
-//    if (!_allStations) {
-//        NSArray *keys = [self.stations allKeys];
-//        NSMutableArray *stations = [NSMutableArray new];
-//        
-//        for (NSString *key in keys) {
-//            [stations addObject:[[GG977StationInfo alloc] initWithTitle:key url:[NSURL URLWithString:self.stations[key]]]];
-//        }
-//        
-//        _allStations = [NSArray arrayWithArray:stations];
-//    }
-//    return _allStations;
-//}
-
 
 @end

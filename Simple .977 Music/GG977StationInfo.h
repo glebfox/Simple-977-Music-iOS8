@@ -10,12 +10,9 @@
 
 @interface GG977StationInfo : NSObject
 
-@property (nonatomic, strong) NSString *title;
-@property (nonatomic, strong) NSURL *url;
+@property (nonatomic, copy, readonly) NSString *title;
+@property (nonatomic, copy, readonly) NSURL *url;
 
 - (id)initWithTitle:(NSString *)title url:(NSURL *)url;
-
-+ (instancetype)new NS_UNAVAILABLE;
-- (instancetype)init NS_UNAVAILABLE;
 
 @end

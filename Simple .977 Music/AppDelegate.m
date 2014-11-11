@@ -8,10 +8,6 @@
 
 #import "AppDelegate.h"
 #import <AVFoundation/AVFoundation.h>
-#import "GG977DataModel.h"
-#import "GG977StationsViewController.h"
-#import "GG977PlayerViewController.h"
-#import "GG977MainViewController.h"
 
 @interface AppDelegate ()
 
@@ -22,22 +18,6 @@
 
 - (BOOL)application:(UIApplication *)application didFinishLaunchingWithOptions:(NSDictionary *)launchOptions {
     // Override point for customization after application launch.
-    
-//    UIViewController *root = self.window.rootViewController;
-//    if ([root class] == [UITabBarController class]) {
-//        UITabBarController *tabBar = (UITabBarController *)root;
-//        UIViewController *controller = [tabBar.viewControllers objectAtIndex:0];
-//        if ([controller class] == [UINavigationController class]) {
-//            UINavigationController *navController = (UINavigationController *)controller;
-//            controller = navController.topViewController;
-//            if ([controller class] == [GG977StationsViewController class]) {
-//                GG977StationsViewController *master = (GG977StationsViewController *)controller;
-//                [master setItemsToDisplay:[[GG977StationsCollection sharedInstance] allStations]];
-//            }
-//        }
-//    }
-    
-    // Turn on remote control event delivery
     [[UIApplication sharedApplication] beginReceivingRemoteControlEvents];
     
     return YES;
@@ -46,13 +26,13 @@
 - (void)applicationWillResignActive:(UIApplication *)application {
     // Sent when the application is about to move from active to inactive state. This can occur for certain types of temporary interruptions (such as an incoming phone call or SMS message) or when the user quits the application and it begins the transition to the background state.
     // Use this method to pause ongoing tasks, disable timers, and throttle down OpenGL ES frame rates. Games should use this method to pause the game.
-    NSLog(@"applicationWillResignActive");
+//    NSLog(@"applicationWillResignActive");
 }
 
 - (void)applicationDidEnterBackground:(UIApplication *)application {
     // Use this method to release shared resources, save user data, invalidate timers, and store enough application state information to restore your application to its current state in case it is terminated later.
     // If your application supports background execution, this method is called instead of applicationWillTerminate: when the user quits.
-    NSLog(@"applicationDidEnterBackground");
+//    NSLog(@"applicationDidEnterBackground");
 }
 
 - (void)applicationWillEnterForeground:(UIApplication *)application {
@@ -65,29 +45,18 @@
 
 - (void)applicationWillTerminate:(UIApplication *)application {
     // Called when the application is about to terminate. Save data if appropriate. See also applicationDidEnterBackground:.
-    NSLog(@"applicationWillTerminate");
-//    UIViewController *root = self.window.rootViewController;
-//    if ([root class] == [GG977MainViewController class]) {
-//        UITabBarController *tabBar = (UITabBarController *)root;
-//        UIViewController *controller = [tabBar.viewControllers objectAtIndex:1];
-//        if ([controller class] == [UINavigationController class]) {
-//            UINavigationController *navController = (UINavigationController *)controller;
-//            controller = navController.topViewController;
-//            if ([controller class] == [GG977PlayerViewController class]) {
-//                GG977PlayerViewController *player = (GG977PlayerViewController *)controller;
-//                NSLog(@"%@", player);
-//                [[NSNotificationCenter defaultCenter] removeObserver:player
-//                                                                name:AVAudioSessionInterruptionNotification
-//                                                              object:[AVAudioSession sharedInstance]];
-//                
-                // Turn off remote control event delivery
-                [[UIApplication sharedApplication] endReceivingRemoteControlEvents];
-//
-//                // Resign as first responder
-//                [player resignFirstResponder];
-//            }
-//        }
-//    }
+//    NSLog(@"applicationWillTerminate");
+        // Отписываемся от RemoteControlEvents
+        [[UIApplication sharedApplication] endReceivingRemoteControlEvents];
+}
+
+#pragma mark - 
+
+- (void)remoteControlReceivedWithEvent:(UIEvent *)receivedEvent {
+//    NSLog(@"AppDelegate - remoteControlReceivedWithEvent");
+    if ([self.delegate respondsToSelector:@selector(applicationReceivedRemoteControlWithEvent:)]) {
+        [self.delegate applicationReceivedRemoteControlWithEvent:receivedEvent];
+    }
 }
 
 @end

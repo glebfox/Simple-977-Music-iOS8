@@ -17,7 +17,9 @@
 
 @end
 
-@implementation GG977MainViewController
+@implementation GG977MainViewController {
+    int _playerViewControllerIndex;
+}
 
 - (id)init {
     if ((self = [super init])) {
@@ -41,20 +43,17 @@
 }
 
 - (void)gg977MasterViewControllerInit {
-//    UINavigationController *nav = [self.viewControllers objectAtIndex:0];
-//    _stationsViewController = (GG977StationsViewController *)nav.topViewController;
-//    
-//    nav = [self.viewControllers objectAtIndex:1];
-//    _playerViewController = (GG977PlayerViewController *)nav.topViewController;
-
-    for (UIViewController *child in self.viewControllers) {
-        UIViewController *controller = child;
+    
+    for (int i = 0; i < [self.viewControllers count]; i++) {
+        UIViewController *controller = self.viewControllers[i];
+        
         if ([controller class] == [UINavigationController class]) {
             controller = ((UINavigationController *)controller).topViewController;
         }
         
         if ([controller class] == [GG977PlayerViewController class]) {
             _playerViewController = (GG977PlayerViewController *)controller;
+            _playerViewControllerIndex = i;
         }
         
         if ([controller class] == [GG977StationsViewController class]) {
@@ -81,16 +80,19 @@
 #pragma mark - GG977StationsViewControllerDelegate
 
 - (void)stationsViewController:(GG977StationsViewController *)stationsViewController didSelectStation:(GG977StationInfo *)stationInfo {
-    [self.playerViewController setStationInfo:stationInfo];
     
-    CATransition *transition = [CATransition animation];
-    transition.type = kCATransitionFade;
-    transition.duration = 1;
-    transition.timingFunction = [CAMediaTimingFunction functionWithName:kCAMediaTimingFunctionEaseOut];
-    
-    self.selectedIndex = 1;
-    
-    [self.view.layer addAnimation:transition forKey:nil];
+    if (self.playerViewController != nil) {
+        [self.playerViewController setStationInfo:stationInfo];
+        
+        CATransition *transition = [CATransition animation];
+        transition.type = kCATransitionFade;
+        transition.duration = 1;
+        transition.timingFunction = [CAMediaTimingFunction functionWithName:kCAMediaTimingFunctionEaseOut];
+        
+        self.selectedIndex = _playerViewControllerIndex;
+        
+        [self.view.layer addAnimation:transition forKey:nil];
+    }
 }
 
 //- (void)transitionFromView:(UIView *)fromView duration:(NSTimeInterval)duration options:(UIViewAnimationOptions)options {

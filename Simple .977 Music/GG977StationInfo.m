@@ -8,13 +8,20 @@
 
 #import "GG977StationInfo.h"
 
+@interface GG977StationInfo ()
+
++ (instancetype)new NS_UNAVAILABLE;
+- (instancetype)init NS_UNAVAILABLE;
+
+@end
+
 @implementation GG977StationInfo
 
 - (id)initWithTitle:(NSString *)title url:(NSURL *)url
 {
     if ((self = [super init])) {
-        self.title = title;
-        self.url = url;
+        _title = [title copy];
+        _url = [url copy];
     }
     return self;
 }

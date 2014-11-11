@@ -7,16 +7,9 @@
 //
 
 #import <Foundation/Foundation.h>
-//#import "GG977StationInfo.h"
 
 @interface GG977DataModel : NSObject
 
-//@property (nonatomic, strong, readonly) NSArray *allStations;
-
-//+ (id)sharedInstance;
-
-//- (GG977StationInfo *)stationByName:(NSString *)name;
 - (NSArray *)allStations;
-
 
 @end
