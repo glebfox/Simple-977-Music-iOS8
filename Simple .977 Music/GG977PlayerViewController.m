@@ -70,7 +70,7 @@ NSString *keyTimedMetadata	= @"currentItem.timedMetadata";
 //    [[UIApplication sharedApplication] beginReceivingRemoteControlEvents];
     
     // Set itself as the first responder
-    [self becomeFirstResponder];
+//    [self becomeFirstResponder];
     
     [[NSNotificationCenter defaultCenter] addObserver:self
                                              selector:@selector(handleAudioSessionInterruption:)
@@ -90,26 +90,6 @@ NSString *keyTimedMetadata	= @"currentItem.timedMetadata";
 - (void)viewDidLoad {
     [super viewDidLoad];
     NSLog(@"GG977PlayerViewController - viewDidLoad");
-//    UISlider *volumeViewSlider;
-////    MPVolumeSlider
-//    // Find the volume view slider
-//    for (UIView *view in [self.volumeView subviews]){
-//        if ([[[view class] description] isEqualToString:@"MPVolumeSlider"]) {
-//            volumeViewSlider = (UISlider *) view;
-//        }
-//    }
-//    [volumeViewSlider setMinimumValueImage:[UIImage imageNamed:@"volume_down.png"]];
-//    [volumeViewSlider setMaximumValueImage:[UIImage imageNamed:@"volume_up.png"]];
-
-//    [volumeViewSlider setMinimumTrackImage:[[UIImage imageNamed:@"list_u.png"] stretchableImageWithLeftCapWidth:10.0f topCapHeight:0.0f] forState:UIControlStateNormal];
-//    [volumeViewSlider setMaximumTrackImage:[[UIImage imageNamed:@"list.png"] stretchableImageWithLeftCapWidth:10.0f topCapHeight:0.0f] forState:UIControlStateNormal];
-
-    
-//    UIImage *minImage = [[UIImage imageNamed:@"list_u.png"] stretchableImageWithLeftCapWidth:10.0f topCapHeight:0.0f];
-//    UIImage *maxImage = [[UIImage imageNamed:@"list.png"] stretchableImageWithLeftCapWidth:10.0f topCapHeight:0.0f];
-
-//    [self.volumeView setMinimumVolumeSliderImage:minImage forState:UIControlStateNormal];
-//    [self.volumeView setMaximumVolumeSliderImage:maxImage forState:UIControlStateNormal];
     
     [self disablePlayerButtons];
     [self clearLabels];
@@ -137,9 +117,6 @@ NSString *keyTimedMetadata	= @"currentItem.timedMetadata";
 
     // Turn off remote control event delivery
 //    [[UIApplication sharedApplication] endReceivingRemoteControlEvents];
-
-    // Resign as first responder
-    [self resignFirstResponder];
 }
 
 - (void)didReceiveMemoryWarning {
@@ -498,7 +475,18 @@ NSString *keyTimedMetadata	= @"currentItem.timedMetadata";
 
 - (void)timerFired:(NSTimer *)timer
 {
+    self.artistInfo.text = @"";
     self.trackInfo.text = NSLocalizedString(@"No metadata", nil);
+    
+    Class playingInfoCenter = NSClassFromString(@"MPNowPlayingInfoCenter");
+    
+    if (playingInfoCenter) {
+        NSMutableDictionary *songInfo = [[NSMutableDictionary alloc] init];
+        
+        [songInfo setObject:self.trackInfo.text forKey:MPMediaItemPropertyTitle];
+        [songInfo setObject:self.artistInfo.text forKey:MPMediaItemPropertyArtist];
+        [[MPNowPlayingInfoCenter defaultCenter] setNowPlayingInfo:songInfo];
+    }
 }
 
 /*

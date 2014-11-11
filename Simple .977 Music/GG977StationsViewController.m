@@ -7,7 +7,8 @@
 //
 
 #import "GG977StationsViewController.h"
-#import "GG977StationsCollection.h"
+#import "GG977DataModel.h"
+#import "GG977StationInfo.h"
 
 @interface GG977StationsViewController ()
 
@@ -28,16 +29,16 @@
 
 #pragma mark - Table view data source
 
-- (NSInteger)numberOfSectionsInTableView:(UITableView *)tableView
-{
-    // Return the number of sections.
-    return 1;
-}
+//- (NSInteger)numberOfSectionsInTableView:(UITableView *)tableView
+//{
+//    // Return the number of sections.
+//    return 1;
+//}
 
 - (NSInteger)tableView:(UITableView *)tableView numberOfRowsInSection:(NSInteger)section
 {
     // Return the number of rows in the section.
-    return [[GG977StationsCollection sharedInstance] allStations].count;
+    return [[self.dataModel allStations] count];
 }
 
 - (UITableViewCell *)tableView:(UITableView *)tableView cellForRowAtIndexPath:(NSIndexPath *)indexPath
@@ -46,7 +47,7 @@
     UITableViewCell *cell = [tableView dequeueReusableCellWithIdentifier:CellIdentider forIndexPath:indexPath];
     
     // Configure the cell...
-    cell.textLabel.text = [[[GG977StationsCollection sharedInstance] allStations][indexPath.row] title];
+    cell.textLabel.text = [[self.dataModel allStations][indexPath.row] title];
     
     return cell;
 }
@@ -55,12 +56,8 @@
 
 - (void)tableView:(UITableView *)tableView didSelectRowAtIndexPath:(NSIndexPath *)indexPath
 {    
-    if ([self.delegate respondsToSelector:@selector(setPlayerStationInfo:)]) {
-        [self.delegate setPlayerStationInfo:[[GG977StationsCollection sharedInstance] allStations][indexPath.row]];
-    }
-
-    if ([self.delegate respondsToSelector:@selector(transitionFromView:duration:options:)]) {
-        [self.delegate transitionFromView:self.view duration:1 options:UIViewAnimationOptionTransitionFlipFromRight];
+    if ([self.delegate respondsToSelector:@selector(stationsViewController:didSelectStation:)]) {
+        [self.delegate stationsViewController:self didSelectStation:[[self.dataModel allStations] objectAtIndex:indexPath.row]];
     }
 }
 

@@ -7,6 +7,8 @@
 //
 
 #import "GG977MainViewController.h"
+#import "GG977PlayerViewController.h"
+#import "GG977DataModel.h"
 
 @interface GG977MainViewController ()
 
@@ -62,6 +64,7 @@
     
     if (_stationsViewController) {
         _stationsViewController.delegate = self;
+        _stationsViewController.dataModel = [GG977DataModel new];
     }
 }
 
@@ -77,11 +80,20 @@
 
 #pragma mark - GG977StationsViewControllerDelegate
 
-- (void)setPlayerStationInfo:(GG977StationInfo *)info {
-    [self.playerViewController setStationInfo:info];
+- (void)stationsViewController:(GG977StationsViewController *)stationsViewController didSelectStation:(GG977StationInfo *)stationInfo {
+    [self.playerViewController setStationInfo:stationInfo];
+    
+    CATransition *transition = [CATransition animation];
+    transition.type = kCATransitionFade;
+    transition.duration = 1;
+    transition.timingFunction = [CAMediaTimingFunction functionWithName:kCAMediaTimingFunctionEaseOut];
+    
+    self.selectedIndex = 1;
+    
+    [self.view.layer addAnimation:transition forKey:nil];
 }
 
-- (void)transitionFromView:(UIView *)fromView duration:(NSTimeInterval)duration options:(UIViewAnimationOptions)options {
+//- (void)transitionFromView:(UIView *)fromView duration:(NSTimeInterval)duration options:(UIViewAnimationOptions)options {
 //    [UIView transitionFromView:fromView
 //                        toView:self.playerViewController.view
 //                      duration:duration
@@ -91,15 +103,8 @@
 //                            self.selectedIndex = 1;
 //                        }
 //                    }];
-    
-    CATransition *transition = [CATransition animation];
-    transition.type = kCATransitionFade;
-    transition.duration = duration;
-    transition.timingFunction = [CAMediaTimingFunction functionWithName:kCAMediaTimingFunctionEaseOut];
-    
-    self.selectedIndex = 1;
-    
-    [self.view.layer addAnimation:transition forKey:nil];
-}
+//    
+//
+//}
 
 @end

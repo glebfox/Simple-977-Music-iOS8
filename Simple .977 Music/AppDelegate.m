@@ -8,7 +8,7 @@
 
 #import "AppDelegate.h"
 #import <AVFoundation/AVFoundation.h>
-#import "GG977StationsCollection.h"
+#import "GG977DataModel.h"
 #import "GG977StationsViewController.h"
 #import "GG977PlayerViewController.h"
 #import "GG977MainViewController.h"

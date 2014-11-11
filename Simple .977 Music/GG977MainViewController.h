@@ -7,7 +7,6 @@
 //
 
 #import <UIKit/UIKit.h>
-#import "GG977PlayerViewController.h"
 #import "GG977StationsViewController.h"
 
 @interface GG977MainViewController : UITabBarController <GG977StationsViewControllerDelegate>
