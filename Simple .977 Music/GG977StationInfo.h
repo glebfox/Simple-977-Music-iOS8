@@ -15,4 +15,7 @@
 
 - (id)initWithTitle:(NSString *)title url:(NSURL *)url;
 
++ (instancetype)new NS_UNAVAILABLE;
+- (instancetype)init NS_UNAVAILABLE;
+
 @end

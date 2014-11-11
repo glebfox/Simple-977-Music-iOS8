@@ -9,8 +9,9 @@
 #import <UIKit/UIKit.h>
 #import "GG977StationInfo.h"
 #import "AppDelegate.h"
+#import "GG977AudioStreamPlayer.h"
 
-@interface GG977PlayerViewController : UIViewController <AppRemoteControlDelegate>
+@interface GG977PlayerViewController : UIViewController <AppRemoteControlDelegate, GG977AudioStreamPlayerDelegate>
 
 @property (strong, nonatomic) GG977StationInfo *stationInfo;
 

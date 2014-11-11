@@ -84,14 +84,14 @@
     if (self.playerViewController != nil) {
         [self.playerViewController setStationInfo:stationInfo];
         
-//        CATransition *transition = [CATransition animation];
-//        transition.type = kCATransitionFade;
-//        transition.duration = 1;
-//        transition.timingFunction = [CAMediaTimingFunction functionWithName:kCAMediaTimingFunctionEaseOut];
-//        
-//        self.selectedIndex = _playerViewControllerIndex;
-//        
-//        [self.view.layer addAnimation:transition forKey:nil];
+        CATransition *transition = [CATransition animation];
+        transition.type = kCATransitionFade;
+        transition.duration = 1;
+        transition.timingFunction = [CAMediaTimingFunction functionWithName:kCAMediaTimingFunctionEaseOut];
+        
+        self.selectedIndex = _playerViewControllerIndex;
+        
+        [self.view.layer addAnimation:transition forKey:nil];
     }
 }
 

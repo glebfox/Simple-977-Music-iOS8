@@ -14,9 +14,11 @@
 @protocol GG977AudioStreamPlayerDelegate <NSObject>
 
 - (void)playerDidBeginConnection:(GG977AudioStreamPlayer *)player;
-- (void)playerDidFailConnection:(GG977AudioStreamPlayer *)player;
+- (void)playerFailedToPrepareForPlayback:(GG977AudioStreamPlayer *)player;
+- (void)playerDidPrepareForPlayback:(GG977AudioStreamPlayer *)player;
 
 - (void)playerDidStartPlaying:(GG977AudioStreamPlayer *)player;
+- (void)playerDidPausePlaying:(GG977AudioStreamPlayer *)player;
 - (void)playerDidStopPlaying:(GG977AudioStreamPlayer *)player;
 
 - (void)player:(GG977AudioStreamPlayer *)player didReceiveTrackInfo:(GG977TrackInfo *)info;

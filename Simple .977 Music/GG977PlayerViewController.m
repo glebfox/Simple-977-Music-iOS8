@@ -9,41 +9,35 @@
 #import "GG977PlayerViewController.h"
 #import <AVFoundation/AVFoundation.h>
 #import <MediaPlayer/MediaPlayer.h>
-#import <MediaPlayer/MPNowPlayingInfoCenter.h>
+//#import <MediaPlayer/MPNowPlayingInfoCenter.h>
 #import "AppDelegate.h"
+#import "GG977TrackInfo.h"
 
-// Переменные хранящие контекст наблюдателя
-static void *timedMetadataObserverContext = &timedMetadataObserverContext;
-static void *rateObserverContext = &rateObserverContext;
-static void *currentItemObserverContext = &currentItemObserverContext;
-static void *playerItemStatusObserverContext = &playerItemStatusObserverContext;
-
-// Переменные - заменители ручного вписывания ключей для наблюдателя
-NSString *keyTracks         = @"tracks";
-NSString *keyStatus         = @"status";
-NSString *keyRate			= @"rate";
-NSString *keyPlayable		= @"playable";
-NSString *keyCurrentItem	= @"currentItem";
-NSString *keyTimedMetadata	= @"currentItem.timedMetadata";
+enum {
+    StatePlayerNone,
+    StatePlayerDidBeginConnection,
+    StatePlayerDidPrepareForPlayback,
+    StatePlayerFailed
+};
 
 @interface GG977PlayerViewController ()
 
-@property (strong) AVPlayer *player;
-@property (strong) AVPlayerItem *playerItem;
+@property (strong, nonatomic) GG977AudioStreamPlayer *player;
 
 @property (weak, nonatomic) IBOutlet UIButton *playPauseButton;
 @property (weak, nonatomic) IBOutlet UILabel *artistInfo;
 @property (weak, nonatomic) IBOutlet UILabel *trackInfo;
 @property (weak, nonatomic) IBOutlet UILabel *stationTitle;
 @property (weak, nonatomic) IBOutlet MPVolumeView *volumeView;
-
-@property(getter=isInterrupted) BOOL interrupted;
-@property(getter=isNewStation) BOOL newStation;
-@property (weak) NSTimer *timer;
+@property (weak, nonatomic) IBOutlet UIImageView *imageView;
 
 @end
 
-@implementation GG977PlayerViewController
+@implementation GG977PlayerViewController {
+    int _playerState;
+}
+
+#pragma mark - init
 
 - (id)init {
     if ((self = [super init])) {
@@ -67,61 +61,41 @@ NSString *keyTimedMetadata	= @"currentItem.timedMetadata";
 }
 
 - (void)gg977PlayerViewControllerInit {
-    // Turn on remote control event delivery
-//    [[UIApplication sharedApplication] beginReceivingRemoteControlEvents];
-    
-    [[NSNotificationCenter defaultCenter] addObserver:self
-                                             selector:@selector(handleAudioSessionInterruption:)
-                                                 name:AVAudioSessionInterruptionNotification
-                                               object:[AVAudioSession sharedInstance]];
-    
-    NSError *setCategoryError = nil;
-    BOOL success = [[AVAudioSession sharedInstance]
-               setCategory: AVAudioSessionCategoryPlayback
-               error: &setCategoryError];
-    
-    if (!success) {
-        NSLog(@"%@", setCategoryError);
-    }
+    NSLog(@"gg977PlayerViewControllerInit");
     
     AppDelegate *appDelegate = (AppDelegate *)[[UIApplication sharedApplication] delegate];
     appDelegate.delegate = self;
+    
+    _playerState = StatePlayerNone;
 }
+
+#pragma mark - View life-cycle
 
 - (void)viewDidLoad {
     [super viewDidLoad];
-//    NSLog(@"GG977PlayerViewController - viewDidLoad");
+    NSLog(@"GG977PlayerViewController - viewDidLoad");
     
     [self disablePlayerButtons];
-    [self clearLabels];
+    [self clearTrackInfoLabels];
     
     if (self.stationInfo != nil) {
         self.stationTitle.text = self.stationInfo.title;
+        self.imageView.image = [UIImage imageNamed:_stationInfo.title];
+    } else {
+        self.stationTitle.text = NSLocalizedString(@"No Station Title", nil);
+    }
+    
+    if (_playerState == StatePlayerDidBeginConnection) {
+        NSLog(@"viewDidLoad - Connecting...");
         self.trackInfo.text = NSLocalizedString(@"Connecting...", nil);
     }
     
-    if ([self isPlaying]) {
+    if ([self.player isPlaying]) {
         self.trackInfo.text = [[[MPNowPlayingInfoCenter defaultCenter] nowPlayingInfo] objectForKey:MPMediaItemPropertyTitle];
         self.artistInfo.text = [[[MPNowPlayingInfoCenter defaultCenter] nowPlayingInfo] objectForKey:MPMediaItemPropertyArtist];
         [self syncPlayPauseButton];
         [self enablePlayerButtons];
     }
-    
-    // Apple recommends that you explicitly activate your session—typically as part of your app’s viewDidLoad method, and set preferred hardware values prior to activating your audio session.
-    NSError *activationError = nil;
-    BOOL success = [[AVAudioSession sharedInstance] setActive: YES error: &activationError];
-    if (!success) {
-        NSLog(@"%@", activationError);
-    }
-}
-
-// При тестах не срабатывал, поэтому перенес все отписки в - (void)applicationWillTerminate:(UIApplication *)application
-- (void)dealloc
-{
-//    NSLog(@"dealloc");
-    [[NSNotificationCenter defaultCenter] removeObserver:self
-                                                    name:AVAudioSessionInterruptionNotification
-                                                  object:[AVAudioSession sharedInstance]];
 }
 
 - (void)didReceiveMemoryWarning {
@@ -129,8 +103,125 @@ NSString *keyTimedMetadata	= @"currentItem.timedMetadata";
     // Dispose of any resources that can be recreated.
 }
 
+#pragma mark -
+
+- (void)setStationInfo:(GG977StationInfo *)stationInfo
+{
+    NSLog(@"setStationInfo");
+    if (![_stationInfo isEqual:stationInfo]) {
+        _stationInfo = stationInfo;
+    
+        self.stationTitle.text = _stationInfo.title;
+        self.imageView.image = [UIImage imageNamed:_stationInfo.title];
+        
+        if (self.player == nil) {
+            self.player = [GG977AudioStreamPlayer new];
+            self.player.delegate = self;
+        }
+        
+        [self.player startNewConnectionWithUrl:_stationInfo.url];
+    }
+}
+
+#pragma mark - UI Updates
+
+- (void)clearTrackInfoLabels
+{
+    NSLog(@"clearTrackInfoLabels");
+    self.artistInfo.text = @"";
+    self.trackInfo.text = @"";
+}
+
+- (void)syncPlayPauseButton
+{
+    UIImage *image = [[UIImage imageNamed: [self.player isPlaying] ? @"pause" : @"play"] imageWithRenderingMode:UIImageRenderingModeAlwaysTemplate];
+    [self.playPauseButton setImage: image forState:UIControlStateNormal];
+}
+
+-(void)enablePlayerButtons
+{
+    NSLog(@"enablePlayerButtons");
+    self.playPauseButton.enabled = YES;
+}
+
+-(void)disablePlayerButtons
+{
+    NSLog(@"disablePlayerButtons");
+    self.playPauseButton.enabled = NO;
+}
+
+#pragma mark - Button Action Methods
+
+- (IBAction)playPause:(id)sender
+{
+    [self.player togglePlayPause];
+}
+
+#pragma mark - GG977AudioStreamPlayerDelegate
+
+- (void)playerDidBeginConnection:(GG977AudioStreamPlayer *)player {
+    NSLog(@"playerDidBeginConnection");
+    
+    _playerState = StatePlayerDidBeginConnection;
+    
+    [self disablePlayerButtons];
+    
+    [self clearTrackInfoLabels];
+    self.trackInfo.text = NSLocalizedString(@"Connecting...", nil);
+}
+
+- (void)playerFailedToPrepareForPlayback:(GG977AudioStreamPlayer *)player {
+    NSLog(@"playerFailedToPrepareForPlayback");
+    
+    _playerState = StatePlayerFailed;
+    
+    self.stationInfo = nil;
+    
+    [self disablePlayerButtons];
+    [self clearTrackInfoLabels];
+}
+
+- (void)playerDidPrepareForPlayback:(GG977AudioStreamPlayer *)player {
+    NSLog(@"playerDidPrepareForPlayback");
+    
+    _playerState = StatePlayerDidPrepareForPlayback;
+    
+    [self enablePlayerButtons];
+    [self clearTrackInfoLabels];
+    self.trackInfo.text = NSLocalizedString(@"Getting metadata...", nil);
+    
+//    [self.player play];
+}
+
+- (void)playerDidStartPlaying:(GG977AudioStreamPlayer *)player {
+    NSLog(@"playerDidStartPlaying");
+    
+    [self syncPlayPauseButton];
+}
+
+- (void)playerDidPausePlaying:(GG977AudioStreamPlayer *)player {
+    NSLog(@"playerDidPausePlaying");
+    
+    [self syncPlayPauseButton];
+}
+
+- (void)playerDidStopPlaying:(GG977AudioStreamPlayer *)player {
+    NSLog(@"playerDidStopPlaying");
+    
+    [self syncPlayPauseButton];
+}
+
+- (void)player:(GG977AudioStreamPlayer *)player didReceiveTrackInfo:(GG977TrackInfo *)info {
+    NSLog(@"didReceiveTrackInfo");
+    
+    self.artistInfo.text = info.artist;
+    self.trackInfo.text = info.track;
+}
+
+#pragma mark - AppRemoteControlDelegate
+
 - (void)applicationReceivedRemoteControlWithEvent:(UIEvent *)receivedEvent {
-//    NSLog(@"player - remoteControlReceivedWithEvent");
+    //    NSLog(@"player - remoteControlReceivedWithEvent");
     if (receivedEvent.type == UIEventTypeRemoteControl) {
         switch (receivedEvent.subtype) {
             case UIEventSubtypeRemoteControlPlay:
@@ -143,350 +234,6 @@ NSString *keyTimedMetadata	= @"currentItem.timedMetadata";
                 break;
         }
     }
-}
-
-#pragma mark - Player
-
-- (void)setStationInfo:(GG977StationInfo *)stationInfo
-{
-//    NSLog(@"setStationInfo");
-    if (![_stationInfo isEqual:stationInfo]) {
-        
-        if ([self.timer isValid]) {
-            [self.timer invalidate];
-            self.timer = nil;
-        }
-        
-        _stationInfo = stationInfo;
-        
-        [[MPNowPlayingInfoCenter defaultCenter] setNowPlayingInfo:nil];
-    
-        self.stationTitle.text = _stationInfo.title;
-        self.artistInfo.text = @"";
-        self.trackInfo.text = NSLocalizedString(@"Connecting...", nil);
-        
-        // Создаем asset для заданного url. Загружаем значения для ключей "tracks", "playable".
-        AVURLAsset *asset = [AVURLAsset URLAssetWithURL:_stationInfo.url options:nil];
-    
-        NSArray *requestedKeys = @[keyTracks, keyPlayable];
-        
-        // Загружаем ключи, которые еще не были загруженны.
-        [asset loadValuesAsynchronouslyForKeys:requestedKeys completionHandler:
-         ^{
-             dispatch_async( dispatch_get_main_queue(),
-                        ^{
-                            [self prepareToPlayAsset:asset withKeys:requestedKeys];
-                        });
-         }];
-    }
-}
-
-/*
- Invoked at the completion of the loading of the values for all keys on the asset that we require.
- Checks whether loading was successfull and whether the asset is playable.
- If so, sets up an AVPlayerItem and an AVPlayer to play the asset.
- */
-- (void)prepareToPlayAsset:(AVURLAsset *)asset withKeys:(NSArray *)requestedKeys
-{
-//    NSLog(@"prepareToPlayAsset");
-    // Убеждаемся, что значение каждого ключа успешно загруженно
-    for (NSString *thisKey in requestedKeys)
-    {
-        NSError *error = nil;
-        AVKeyValueStatus keyStatus = [asset statusOfValueForKey:thisKey error:&error];
-        if (keyStatus == AVKeyValueStatusFailed)
-        {
-            [self assetFailedToPrepareForPlayback:error];
-            return;
-        }
-    }
-    
-    // Проверяем может ли asset проигрываться.
-    if (!asset.playable)
-    {
-        NSString *localizedDescription = NSLocalizedString(@"Item cannot be played", @"Item cannot be played description");
-        NSString *localizedFailureReason = NSLocalizedString(@"The assets tracks were loaded, but could not be made playable.", @"Item cannot be played failure reason");
-        NSDictionary *errorDict = [NSDictionary dictionaryWithObjectsAndKeys:
-                                   localizedDescription, NSLocalizedDescriptionKey,
-                                   localizedFailureReason, NSLocalizedFailureReasonErrorKey,
-                                   nil];
-        NSError *assetCannotBePlayedError = [NSError errorWithDomain:@"GG977Music" code:0 userInfo:errorDict];
-        
-        [self assetFailedToPrepareForPlayback:assetCannotBePlayedError];
-        
-        return;
-    }
-    
-//    [self enablePlayerButtons];
-    self.newStation = YES;
-    
-    /* Если у нас уже был AVPlayerItem, то удаляем его слушателя. */
-    if (self.playerItem)
-    {
-        [self.playerItem removeObserver:self forKeyPath:keyStatus];
-    }
-    
-    // Создаем новый playerItem
-    self.playerItem = [AVPlayerItem playerItemWithAsset:asset];
-    
-    [self.playerItem addObserver:self
-                      forKeyPath:keyStatus
-                         options:NSKeyValueObservingOptionInitial | NSKeyValueObservingOptionNew
-                         context:playerItemStatusObserverContext];
-
-    // Создаем нового player, если еще этого не делали
-    if (!self.player)
-    {
-        self.player = [AVPlayer playerWithPlayerItem:self.playerItem];
-        
-        // Для отслеживания исзменения текущего playerItem
-        [self.player addObserver:self
-                      forKeyPath:keyCurrentItem
-                         options:NSKeyValueObservingOptionInitial | NSKeyValueObservingOptionNew
-                         context:currentItemObserverContext];
-        
-        // Свойство 'currentItem.timedMetadata' для слежения за изменениями metadata
-        [self.player addObserver:self
-                      forKeyPath:keyTimedMetadata
-                         options:NSKeyValueObservingOptionNew
-                         context:timedMetadataObserverContext];
-        
-        // Свойство AVPlayer "rate", чтобы отслеживать запуск и останов проигрывания
-        [self.player addObserver:self
-                      forKeyPath:keyRate
-                         options:NSKeyValueObservingOptionInitial | NSKeyValueObservingOptionNew
-                         context:rateObserverContext];
-    }
-    
-    if (self.player.currentItem != self.playerItem)
-    {
-        [self.player replaceCurrentItemWithPlayerItem:self.playerItem];
-        [self syncPlayPauseButton];
-    }
-}
-
-- (BOOL)isPlaying
-{
-    return self.player.rate != 0.f;
-}
-
-#pragma mark - Play, Stop Buttons and Labels
-
-- (void)clearLabels
-{
-    self.artistInfo.text = @"";
-    self.trackInfo.text = @"";
-    self.stationTitle.text = NSLocalizedString(@"No Station Title", nil);
-}
-
-- (void)syncPlayPauseButton
-{
-//    NSLog(@"syncPlayPauseButton");
-    // В зависимости от состояния отображаем ту или иную картинку для кнопки
-    UIImage *image = [[UIImage imageNamed: [self isPlaying] ? @"pause" : @"play"] imageWithRenderingMode:UIImageRenderingModeAlwaysTemplate];
-    [self.playPauseButton setImage: image forState:UIControlStateNormal];
-}
-
--(void)enablePlayerButtons
-{
-    self.playPauseButton.enabled = YES;
-}
-
--(void)disablePlayerButtons
-{
-    self.playPauseButton.enabled = NO;
-}
-
-#pragma mark - Button Action Methods
-
-- (IBAction)playPause:(id)sender
-{
-//    NSLog(@"playPause");
-    [self isPlaying] ? [self.player pause] : [self.player play];
-}
-
-#pragma mark - Notifications
-
-- (void)handleAudioSessionInterruption:(NSNotification*) notification
-{
-    NSNumber *interruptionType = [[notification userInfo] objectForKey:AVAudioSessionInterruptionTypeKey];
-//    NSNumber *interruptionOption = [[notification userInfo] objectForKey:AVAudioSessionInterruptionOptionKey];
-//    NSLog(@"interruptionType - %lu", (unsigned long)interruptionType.unsignedIntegerValue);
-    
-    switch (interruptionType.unsignedIntegerValue) {
-        case AVAudioSessionInterruptionTypeBegan: {
-//            NSLog(@"AVAudioSessionInterruptionTypeBegan");
-            self.interrupted = YES;
-            if ([self isPlaying]) {
-                [self.player pause];
-            }
-        } break;
-        case AVAudioSessionInterruptionTypeEnded: {
-//            NSLog(@"AVAudioSessionInterruptionTypeEnded");
-//            [self.player play];
-        } break;
-        default:
-            break;
-    }
-}
-
-#pragma mark - Timed metadata
-
-// Обрабатывает метаданные
-- (void)handleTimedMetadata:(AVMetadataItem*)timedMetadata
-{
-//    NSLog(@"handleTimedMetadata");
-    [self.timer invalidate];
-    self.timer = nil;
-    if ([timedMetadata.commonKey isEqualToString:@"title"]) {
-        // Здесь не совсем универсальная ситуация, поскольку разные станцие по разному разделяют артиста и название трека, но с .977 всегда через "-"
-        NSArray *array = [[timedMetadata.value description] componentsSeparatedByString:@" - "];
-        if (array.count > 1) {
-            self.artistInfo.text = array[0];
-            self.trackInfo.text = array[1];
-        } else {
-            self.trackInfo.text = array[0];
-            self.artistInfo.text = @"";
-        }
-        
-        [self setInfoCenterWithArtist:array[0] title:array[1]];
-    }
-}
-
-#pragma mark - Error Handling - Preparing Assets for Playback Failed
-
-/* --------------------------------------------------------------
- **  Called when an asset fails to prepare for playback for any of
- **  the following reasons:
- **
- **  1) values of asset keys did not load successfully,
- **  2) the asset keys did load successfully, but the asset is not
- **     playable
- **  3) the item did not become ready to play.
- ** ----------------------------------------------------------- */
-
--(void)assetFailedToPrepareForPlayback:(NSError *)error
-{
-    self.stationInfo = nil;
-    
-    [self disablePlayerButtons];
-    [self clearLabels];
-    
-    UIAlertView *alertView = [[UIAlertView alloc] initWithTitle:[error localizedDescription]
-                                                        message:[error localizedFailureReason]
-                                                       delegate:nil
-                                              cancelButtonTitle:NSLocalizedString(@"OK", nil)
-                                              otherButtonTitles:nil];
-    [alertView show];
-}
-
-#pragma mark - Asset Key Value Observing
-
-- (void)observeValueForKeyPath:(NSString*) path
-                      ofObject:(id)object
-                        change:(NSDictionary*)change
-                       context:(void*)context
-{
-    // AVPlayerItem "status"
-    if (context == playerItemStatusObserverContext)
-    {
-        
-        AVPlayerStatus status = [[change objectForKey:NSKeyValueChangeNewKey] integerValue];
-        switch (status)
-        {
-            // Указывает на то, что player еще не имеет конкретного статуса, т.к. он еще не пробовал загрузить медиа данные
-            case AVPlayerStatusUnknown:
-            {
-//                NSLog(@"AVPlayerStatusUnknown");
-                [self disablePlayerButtons];
-            }
-                break;
-            // AVPlayerItem готов к проигрыванию
-            case AVPlayerStatusReadyToPlay:
-            {
-//                NSLog(@"AVPlayerStatusReadyToPlay");
-                if (!self.isInterrupted && self.isNewStation) {
-                    [self enablePlayerButtons];
-                    self.trackInfo.text = NSLocalizedString(@"Getting metadata...", nil);
-                    [self.player play];
-                    
-                    self.timer = [NSTimer scheduledTimerWithTimeInterval:10.0
-                                                     target:self
-                                                   selector:@selector(timerFired:)
-                                                   userInfo:nil
-                                                    repeats:NO];
-
-                    self.newStation = NO;
-                }
-                self.interrupted = NO;
-            }
-                break;
-                
-            case AVPlayerStatusFailed:
-            {
-//                NSLog(@"AVPlayerStatusFailed");
-                AVPlayerItem *thePlayerItem = (AVPlayerItem *)object;
-                [self assetFailedToPrepareForPlayback:thePlayerItem.error];
-            }
-                break;
-        }
-    }
-    // AVPlayer "rate"
-    else if (context == rateObserverContext)
-    {
-//        NSLog(@"rateObserverContext - syncPlayPauseButton");
-        [self syncPlayPauseButton];
-    }
-    // AVPlayer "currentItem". Срабатывает когда AVPlayer вызывает replaceCurrentItemWithPlayerItem:
-    else if (context == currentItemObserverContext)
-    {
-//        NSLog(@"currentItemObserverContext");
-        AVPlayerItem *newPlayerItem = [change objectForKey:NSKeyValueChangeNewKey];
-        
-        // Если вдруг нечем проигрывать, то делаем кнопки неактивными
-        if (newPlayerItem == (id)[NSNull null])
-        {
-            [self disablePlayerButtons];
-            
-        }
-        else // А если есть чем проигрывать, то нам нечего тут делать пока что
-        {
-        }
-    }
-    // Обрабатываем изменения метаданных
-    else if (context == timedMetadataObserverContext)
-    {
-//        NSLog(@"timedMetadataObserverContext");
-        NSArray* array = self.player.currentItem.timedMetadata;
-        for (AVMetadataItem *metadataItem in array)
-        {
-            [self handleTimedMetadata:metadataItem];
-        }
-    }
-    else
-    {
-//        NSLog(@"observeValueForKeyPath - super");
-        [super observeValueForKeyPath:path ofObject:object change:change context:context];
-    }
-    return;
-}
-
-- (void)timerFired:(NSTimer *)timer
-{
-    self.artistInfo.text = @"";
-    self.trackInfo.text = NSLocalizedString(@"No metadata", nil);
-    
-    [self setInfoCenterWithArtist:@"" title:NSLocalizedString(@"No metadata", nil)];
-}
-
-- (void)setInfoCenterWithArtist:(NSString *)artist title:(NSString *)title {
-
-    NSMutableDictionary *songInfo = [[NSMutableDictionary alloc] init];
-    
-    [songInfo setObject:title forKey:MPMediaItemPropertyTitle];
-    [songInfo setObject:artist forKey:MPMediaItemPropertyArtist];
-    
-    [[MPNowPlayingInfoCenter defaultCenter] setNowPlayingInfo:songInfo];
 }
 
 @end
