@@ -25,10 +25,14 @@
 
 @interface GG977AudioStreamPlayer : NSObject
 
+@property (nonatomic, weak) id<GG977AudioStreamPlayerDelegate> delegate;
+
 - (void)play;
 - (void)pause;
 - (void)stop;
 - (void)togglePlayPause;
+
+- (BOOL)isPlaying;
 
 - (void)startNewConnectionWithUrl:(NSURL *)url;
 

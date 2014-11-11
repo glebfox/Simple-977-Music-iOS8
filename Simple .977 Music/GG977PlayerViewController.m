@@ -100,6 +100,13 @@ NSString *keyTimedMetadata	= @"currentItem.timedMetadata";
         self.trackInfo.text = NSLocalizedString(@"Connecting...", nil);
     }
     
+    if ([self isPlaying]) {
+        self.trackInfo.text = [[[MPNowPlayingInfoCenter defaultCenter] nowPlayingInfo] objectForKey:MPMediaItemPropertyTitle];
+        self.artistInfo.text = [[[MPNowPlayingInfoCenter defaultCenter] nowPlayingInfo] objectForKey:MPMediaItemPropertyArtist];
+        [self syncPlayPauseButton];
+        [self enablePlayerButtons];
+    }
+    
     // Apple recommends that you explicitly activate your session—typically as part of your app’s viewDidLoad method, and set preferred hardware values prior to activating your audio session.
     NSError *activationError = nil;
     BOOL success = [[AVAudioSession sharedInstance] setActive: YES error: &activationError];
@@ -151,6 +158,8 @@ NSString *keyTimedMetadata	= @"currentItem.timedMetadata";
         }
         
         _stationInfo = stationInfo;
+        
+        [[MPNowPlayingInfoCenter defaultCenter] setNowPlayingInfo:nil];
     
         self.stationTitle.text = _stationInfo.title;
         self.artistInfo.text = @"";
@@ -340,7 +349,7 @@ NSString *keyTimedMetadata	= @"currentItem.timedMetadata";
             self.artistInfo.text = @"";
         }
         
-        [self setInfoCenter];
+        [self setInfoCenterWithArtist:array[0] title:array[1]];
     }
 }
 
@@ -467,27 +476,17 @@ NSString *keyTimedMetadata	= @"currentItem.timedMetadata";
     self.artistInfo.text = @"";
     self.trackInfo.text = NSLocalizedString(@"No metadata", nil);
     
-    [self setInfoCenter];
+    [self setInfoCenterWithArtist:@"" title:NSLocalizedString(@"No metadata", nil)];
 }
 
-- (void)setInfoCenter {
-    Class playingInfoCenter = NSClassFromString(@"MPNowPlayingInfoCenter");
+- (void)setInfoCenterWithArtist:(NSString *)artist title:(NSString *)title {
+
+    NSMutableDictionary *songInfo = [[NSMutableDictionary alloc] init];
     
-    if (playingInfoCenter) {
-        [[MPNowPlayingInfoCenter defaultCenter] setNowPlayingInfo:
-         @{ MPMediaItemPropertyTitle: self.trackInfo.text,
-            MPMediaItemPropertyArtist : self.artistInfo.text }];
-    }
+    [songInfo setObject:title forKey:MPMediaItemPropertyTitle];
+    [songInfo setObject:artist forKey:MPMediaItemPropertyArtist];
+    
+    [[MPNowPlayingInfoCenter defaultCenter] setNowPlayingInfo:songInfo];
 }
-
-/*
-#pragma mark - Navigation
-
-// In a storyboard-based application, you will often want to do a little preparation before navigation
-- (void)prepareForSegue:(UIStoryboardSegue *)segue sender:(id)sender {
-    // Get the new view controller using [segue destinationViewController].
-    // Pass the selected object to the new view controller.
-}
-*/
 
 @end

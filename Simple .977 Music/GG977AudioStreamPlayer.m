@@ -7,6 +7,7 @@
 //
 
 #import "GG977AudioStreamPlayer.h"
+#import "GG977TrackInfo.h"
 
 @implementation GG977AudioStreamPlayer
 
@@ -26,9 +27,12 @@
     
 }
 
+- (BOOL)isPlaying {
+    return false;
+}
+
 - (void)startNewConnectionWithUrl:(NSURL *)url {
     
 }
-
 
 @end
