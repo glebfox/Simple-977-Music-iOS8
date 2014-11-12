@@ -14,13 +14,14 @@
 @protocol GG977AudioStreamPlayerDelegate <NSObject>
 
 - (void)playerDidBeginConnection:(GG977AudioStreamPlayer *)player;
-- (void)playerFailedToPrepareForPlayback:(GG977AudioStreamPlayer *)player;
+- (void)player:(GG977AudioStreamPlayer *)player failedToPrepareForPlaybackWithError:(NSError *)error;
 - (void)playerDidPrepareForPlayback:(GG977AudioStreamPlayer *)player;
 
 - (void)playerDidStartPlaying:(GG977AudioStreamPlayer *)player;
 - (void)playerDidPausePlaying:(GG977AudioStreamPlayer *)player;
-- (void)playerDidStopPlaying:(GG977AudioStreamPlayer *)player;
+//- (void)playerDidStopPlaying:(GG977AudioStreamPlayer *)player;
 
+- (void)playerDidStartReceivingTrackInfo:(GG977AudioStreamPlayer *)player;
 - (void)player:(GG977AudioStreamPlayer *)player didReceiveTrackInfo:(GG977TrackInfo *)info;
 
 @end
@@ -29,9 +30,11 @@
 
 @property (nonatomic, weak) id<GG977AudioStreamPlayerDelegate> delegate;
 
+@property (nonatomic, assign) BOOL autoPlay;
+
 - (void)play;
 - (void)pause;
-- (void)stop;
+//- (void)stop;
 - (void)togglePlayPause;
 
 - (BOOL)isPlaying;

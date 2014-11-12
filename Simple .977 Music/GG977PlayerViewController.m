@@ -77,6 +77,7 @@ enum {
     
     [self disablePlayerButtons];
     [self clearTrackInfoLabels];
+    [self syncPlayPauseButton];
     
     if (self.stationInfo != nil) {
         self.stationTitle.text = self.stationInfo.title;
@@ -134,6 +135,7 @@ enum {
 
 - (void)syncPlayPauseButton
 {
+    NSLog(@"syncPlayPauseButton");
     UIImage *image = [[UIImage imageNamed: [self.player isPlaying] ? @"pause" : @"play"] imageWithRenderingMode:UIImageRenderingModeAlwaysTemplate];
     [self.playPauseButton setImage: image forState:UIControlStateNormal];
 }
@@ -165,12 +167,13 @@ enum {
     _playerState = StatePlayerDidBeginConnection;
     
     [self disablePlayerButtons];
+    [self syncPlayPauseButton];
     
     [self clearTrackInfoLabels];
     self.trackInfo.text = NSLocalizedString(@"Connecting...", nil);
 }
 
-- (void)playerFailedToPrepareForPlayback:(GG977AudioStreamPlayer *)player {
+- (void)player:(GG977AudioStreamPlayer *)player failedToPrepareForPlaybackWithError:(NSError *)error {
     NSLog(@"playerFailedToPrepareForPlayback");
     
     _playerState = StatePlayerFailed;
@@ -179,6 +182,14 @@ enum {
     
     [self disablePlayerButtons];
     [self clearTrackInfoLabels];
+    [self syncPlayPauseButton];
+    
+    UIAlertView *alertView = [[UIAlertView alloc] initWithTitle:[error localizedDescription]
+                                                        message:[error localizedFailureReason]
+                                                       delegate:nil
+                                              cancelButtonTitle:NSLocalizedString(@"OK", nil)
+                                              otherButtonTitles:nil];
+    [alertView show];
 }
 
 - (void)playerDidPrepareForPlayback:(GG977AudioStreamPlayer *)player {
@@ -188,9 +199,10 @@ enum {
     
     [self enablePlayerButtons];
     [self clearTrackInfoLabels];
-    self.trackInfo.text = NSLocalizedString(@"Getting metadata...", nil);
     
-//    [self.player play];
+    self.trackInfo.text = NSLocalizedString(@"Press play button to listen", nil);
+    
+    [self.player play];
 }
 
 - (void)playerDidStartPlaying:(GG977AudioStreamPlayer *)player {
@@ -205,10 +217,14 @@ enum {
     [self syncPlayPauseButton];
 }
 
-- (void)playerDidStopPlaying:(GG977AudioStreamPlayer *)player {
-    NSLog(@"playerDidStopPlaying");
-    
-    [self syncPlayPauseButton];
+//- (void)playerDidStopPlaying:(GG977AudioStreamPlayer *)player {
+//    NSLog(@"playerDidStopPlaying");
+//    
+//    [self syncPlayPauseButton];
+//}
+
+- (void)playerDidStartReceivingTrackInfo:(GG977AudioStreamPlayer *)player {
+    self.trackInfo.text = NSLocalizedString(@"Getting metadata...", nil);
 }
 
 - (void)player:(GG977AudioStreamPlayer *)player didReceiveTrackInfo:(GG977TrackInfo *)info {

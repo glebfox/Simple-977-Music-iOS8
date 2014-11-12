@@ -26,6 +26,13 @@ NSString *keyPlayable		= @"playable";
 NSString *keyCurrentItem	= @"currentItem";
 NSString *keyTimedMetadata	= @"currentItem.timedMetadata";
 
+enum {
+    PlayerStateNone,
+    PlayerStateStopped,
+    PlayerStatePaused,
+    PlayerStatePlaying
+};
+
 @interface GG977AudioStreamPlayer ()
 
 @property (strong) AVPlayer *player;
@@ -37,7 +44,9 @@ NSString *keyTimedMetadata	= @"currentItem.timedMetadata";
 
 @end
 
-@implementation GG977AudioStreamPlayer
+@implementation GG977AudioStreamPlayer {
+    int _playerState;
+}
 
 #pragma mark - init
 
@@ -63,6 +72,9 @@ NSString *keyTimedMetadata	= @"currentItem.timedMetadata";
         if (!success) {
             NSLog(@"%@", setCategoryError);
         }
+        
+        _playerState = PlayerStateNone;
+        _autoPlay = NO;
     }
     return self;
 }
@@ -73,38 +85,67 @@ NSString *keyTimedMetadata	= @"currentItem.timedMetadata";
     [[NSNotificationCenter defaultCenter] removeObserver:self
                                                     name:AVAudioSessionInterruptionNotification
                                                   object:[AVAudioSession sharedInstance]];
+    
+    [self.playerItem removeObserver:self forKeyPath:keyStatus];
+    
+    [self.player removeObserver:self forKeyPath:keyCurrentItem];
+    [self.player removeObserver:self forKeyPath:keyTimedMetadata];
+    [self.player removeObserver:self forKeyPath:keyRate];
 }
 
 #pragma mark - Control state
 
 - (void)play {
-    [self.player play];
-    
-    if ([self.delegate respondsToSelector:@selector(playerDidStartPlaying:)]) {
-        [self.delegate playerDidStartPlaying:self];
+    if (_playerState != PlayerStateNone) {
+        if (_playerState == PlayerStateStopped) {
+            self.timer = [NSTimer scheduledTimerWithTimeInterval:10.0
+                                                          target:self
+                                                        selector:@selector(timerFired:)
+                                                        userInfo:nil
+                                                         repeats:NO];
+            
+            if ([self.delegate respondsToSelector:@selector(playerDidStartReceivingTrackInfo:)]) {
+                [self.delegate playerDidStartReceivingTrackInfo:self];
+            }
+        }
+        
+        [self.player play];
+        
+        _playerState = PlayerStatePlaying;
+        
+        if ([self.delegate respondsToSelector:@selector(playerDidStartPlaying:)]) {
+            [self.delegate playerDidStartPlaying:self];
+        }
     }
 }
 
 - (void)pause {
-    [self.player pause];
-    
-    if ([self.delegate respondsToSelector:@selector(playerDidPausePlaying:)]) {
-        [self.delegate playerDidPausePlaying:self];
+    if (_playerState != PlayerStateNone) {
+        [self.player pause];
+        
+        _playerState = PlayerStatePaused;
+        
+        if ([self.delegate respondsToSelector:@selector(playerDidPausePlaying:)]) {
+            [self.delegate playerDidPausePlaying:self];
+        }
     }
 }
 
-- (void)stop {
-    if ([self.delegate respondsToSelector:@selector(playerDidStopPlaying:)]) {
-        [self.delegate playerDidStopPlaying:self];
-    }
-}
+//- (void)stop {
+//    _playerState = PlayerStateStopped;
+//    
+//    if ([self.delegate respondsToSelector:@selector(playerDidStopPlaying:)]) {
+//        [self.delegate playerDidStopPlaying:self];
+//    }
+//}
 
 - (void)togglePlayPause {
     [self isPlaying] ? [self pause] : [self play];
 }
 
 - (BOOL)isPlaying {
-    return self.player.rate != 0.f;
+//    return self.player.rate != 0.f;
+    return _playerState == PlayerStatePlaying;
 }
 
 #pragma mark - AVPlayer prepare
@@ -135,6 +176,8 @@ NSString *keyTimedMetadata	= @"currentItem.timedMetadata";
 
 - (void)prepareToPlayAsset:(AVURLAsset *)asset withKeys:(NSArray *)requestedKeys
 {
+    _playerState = PlayerStateStopped;
+    
     if ([self.delegate respondsToSelector:@selector(playerDidBeginConnection:)]) {
         [self.delegate playerDidBeginConnection:self];
     }
@@ -208,6 +251,8 @@ NSString *keyTimedMetadata	= @"currentItem.timedMetadata";
                          context:rateObserverContext];
     }
     
+    [self.player pause];
+    
     if (self.player.currentItem != self.playerItem)
     {
         [self.player replaceCurrentItemWithPlayerItem:self.playerItem];
@@ -218,24 +263,18 @@ NSString *keyTimedMetadata	= @"currentItem.timedMetadata";
 
 -(void)assetFailedToPrepareForPlayback:(NSError *)error
 {
-    if ([self.delegate respondsToSelector:@selector(playerFailedToPrepareForPlayback:)]) {
-        [self.delegate playerFailedToPrepareForPlayback:self];
-    }
+    _playerState = PlayerStateNone;
     
-    UIAlertView *alertView = [[UIAlertView alloc] initWithTitle:[error localizedDescription]
-                                                        message:[error localizedFailureReason]
-                                                       delegate:nil
-                                              cancelButtonTitle:NSLocalizedString(@"OK", nil)
-                                              otherButtonTitles:nil];
-    [alertView show];
+    if ([self.delegate respondsToSelector:@selector(player:failedToPrepareForPlaybackWithError:)]) {
+        [self.delegate player:self failedToPrepareForPlaybackWithError:error];
+    }
 }
 
 
 #pragma mark - Timed metadata
 
 // Обрабатывает метаданные
-- (void)handleTimedMetadata:(AVMetadataItem*)timedMetadata
-{
+- (void)handleTimedMetadata:(AVMetadataItem*)timedMetadata {
     //    NSLog(@"handleTimedMetadata");
     [self.timer invalidate];
     self.timer = nil;
@@ -259,8 +298,7 @@ NSString *keyTimedMetadata	= @"currentItem.timedMetadata";
     }
 }
 
-- (void)timerFired:(NSTimer *)timer
-{
+- (void)timerFired:(NSTimer *)timer {
     GG977TrackInfo *info = [GG977TrackInfo new];
     info.artist = @"";
     info.track = NSLocalizedString(@"No metadata", nil);
@@ -299,27 +337,22 @@ NSString *keyTimedMetadata	= @"currentItem.timedMetadata";
                 // Указывает на то, что player еще не имеет конкретного статуса, т.к. он еще не пробовал загрузить медиа данные
             case AVPlayerStatusUnknown:
             {
-                //                NSLog(@"AVPlayerStatusUnknown");
-//                [self disablePlayerButtons];
+//                NSLog(@"AVPlayerStatusUnknown");
             }
                 break;
                 // AVPlayerItem готов к проигрыванию
             case AVPlayerStatusReadyToPlay:
             {
-                //                NSLog(@"AVPlayerStatusReadyToPlay");
+//                NSLog(@"AVPlayerStatusReadyToPlay");
                 if (!self.isInterrupted && self.isNewStation) {
                     
                     if ([self.delegate respondsToSelector:@selector(playerDidPrepareForPlayback:)]) {
                         [self.delegate playerDidPrepareForPlayback:self];
                     }
-#warning сделать свойство автостарт
-                    [self play];
-                    
-                    self.timer = [NSTimer scheduledTimerWithTimeInterval:10.0
-                                                                  target:self
-                                                                selector:@selector(timerFired:)
-                                                                userInfo:nil
-                                                                 repeats:NO];
+
+                    if (self.autoPlay) {
+                        [self play];
+                    }
                     
                     self.newStation = NO;
                 }
