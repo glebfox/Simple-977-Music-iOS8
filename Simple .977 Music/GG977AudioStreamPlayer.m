@@ -414,20 +414,21 @@ enum {
 - (void)handleAudioSessionInterruption:(NSNotification*) notification
 {
     NSNumber *interruptionType = [[notification userInfo] objectForKey:AVAudioSessionInterruptionTypeKey];
-    //    NSNumber *interruptionOption = [[notification userInfo] objectForKey:AVAudioSessionInterruptionOptionKey];
-    //    NSLog(@"interruptionType - %lu", (unsigned long)interruptionType.unsignedIntegerValue);
+//    NSNumber *interruptionOption = [[notification userInfo] objectForKey:AVAudioSessionInterruptionOptionKey];
+//    NSLog(@"interruptionType - %lu", (unsigned long)interruptionType.unsignedIntegerValue);
+//    NSLog(@"interruptionOption - %lu", (unsigned long)interruptionOption.unsignedIntegerValue);
     
     switch (interruptionType.unsignedIntegerValue) {
         case AVAudioSessionInterruptionTypeBegan: {
-            //            NSLog(@"AVAudioSessionInterruptionTypeBegan");
+            NSLog(@"AVAudioSessionInterruptionTypeBegan");
             self.interrupted = YES;
             if ([self isPlaying]) {
                 [self pause];
             }
         } break;
         case AVAudioSessionInterruptionTypeEnded: {
-            //            NSLog(@"AVAudioSessionInterruptionTypeEnded");
-            //            [self.player play];
+            NSLog(@"AVAudioSessionInterruptionTypeEnded");
+//            [self.player play];
         } break;
         default:
             break;
