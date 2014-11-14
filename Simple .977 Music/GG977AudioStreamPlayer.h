@@ -1,15 +1,15 @@
 //
 //  GG977AudioStreamPlayer.h
-//  Simple .977 Music
+//  AudioQueueTest
 //
-//  Created by Gleb Gorelov on 11.11.14.
+//  Created by Gleb Gorelov on 12.11.14.
 //  Copyright (c) 2014 Gleb Gorelov. All rights reserved.
 //
 
-#import <Foundation/Foundation.h>
+#import <UIKit/UIKit.h>
+#import <AudioToolbox/AudioToolbox.h>
 
 @class GG977AudioStreamPlayer;
-@class GG977TrackInfo;
 
 @protocol GG977AudioStreamPlayerDelegate <NSObject>
 
@@ -19,10 +19,10 @@
 
 - (void)playerDidStartPlaying:(GG977AudioStreamPlayer *)player;
 - (void)playerDidPausePlaying:(GG977AudioStreamPlayer *)player;
-//- (void)playerDidStopPlaying:(GG977AudioStreamPlayer *)player;
+- (void)playerDidStopPlaying:(GG977AudioStreamPlayer *)player;
 
-- (void)playerDidStartReceivingTrackInfo:(GG977AudioStreamPlayer *)player;
-- (void)player:(GG977AudioStreamPlayer *)player didReceiveTrackInfo:(GG977TrackInfo *)info;
+//- (void)playerDidStartReceivingTrackInfo:(GG977AudioStreamPlayer *)player;
+//- (void)player:(GG977AudioStreamPlayer *)player didReceiveTrackInfo:(GG977TrackInfo *)info;
 
 @end
 
@@ -30,15 +30,17 @@
 
 @property (nonatomic, weak) id<GG977AudioStreamPlayerDelegate> delegate;
 
-@property (nonatomic, assign) BOOL autoPlay;
+- (id)initWithURL:(NSURL *)url;
 
-- (void)play;
+- (void)start;
+- (void)stop;
 - (void)pause;
-//- (void)stop;
-- (void)togglePlayPause;
-
 - (BOOL)isPlaying;
-
-- (void)startNewConnectionWithUrl:(NSURL *)url;
+- (BOOL)isPaused;
+- (BOOL)isWaiting;
+- (BOOL)isIdle;
+- (BOOL)isAborted;
 
 @end
+
+extern NSString * const ASStatusChangedNotification;

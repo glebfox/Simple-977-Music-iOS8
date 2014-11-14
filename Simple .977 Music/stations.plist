@@ -24,5 +24,9 @@
 	<string>http://www.977music.com/itunes/comedy.pls</string>
 	<key>90s</key>
 	<string>http://www.977music.com/itunes/90s.pls</string>
+	<key>Test</key>
+	<string>http://shoutmedia.abc.net.au:10326</string>
+	<key>Alternative Test</key>
+	<string>http://7669.live.streamtheworld.com:80/977_ALTERNAAC_SC</string>
 </dict>
 </plist>
