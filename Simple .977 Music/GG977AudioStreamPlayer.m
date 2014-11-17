@@ -8,7 +8,9 @@
 
 #import "GG977AudioStreamPlayer.h"
 #import <CFNetwork/CFNetwork.h>
+//#import <AVFoundation/AVFoundation.h>
 #include <pthread.h>
+#import "GG977StationInfo.h"
 
 #define LOG_QUEUED_BUFFERS 0
 
@@ -120,9 +122,11 @@ typedef enum
 //- (void)enqueueBuffer;
 - (void)handleReadFromStream:(CFReadStreamRef)aStream eventType:(CFStreamEventType)eventType;
 
+@property (nonatomic, strong) GG977StationInfo *station;
+
 @end
 
-#pragma mark Audio Callback Function Implementations
+#pragma mark - Audio Callback Function Implementations
 
 /**
  Receives notification when the AudioFileStream has audio packets to be
@@ -141,10 +145,7 @@ static void ASPropertyListenerProc(void *						inClientData,
 //    NSLog(@"ASPropertyListenerProc");
     // this is called by audio file stream when it finds property values
     GG977AudioStreamPlayer* streamer = (__bridge GG977AudioStreamPlayer *)inClientData;
-    [streamer
-     handlePropertyChangeForFileStream:inAudioFileStream
-     fileStreamPropertyID:inPropertyID
-     ioFlags:ioFlags];
+    [streamer handlePropertyChangeForFileStream:inAudioFileStream fileStreamPropertyID:inPropertyID ioFlags:ioFlags];
 }
 
 /**
@@ -165,11 +166,7 @@ static void ASPacketsProc(void *						inClientData,
 //    NSLog(@"ASPacketsProc");
     // this is called by audio file stream when it finds packets of audio
     GG977AudioStreamPlayer* streamer = (__bridge GG977AudioStreamPlayer *)inClientData;
-    [streamer
-     handleAudioPackets:inInputData
-     numberBytes:inNumberBytes
-     numberPackets:inNumberPackets
-     packetDescriptions:inPacketDescriptions];
+    [streamer handleAudioPackets:inInputData numberBytes:inNumberBytes numberPackets:inNumberPackets packetDescriptions:inPacketDescriptions];
 }
 
 /**
@@ -210,7 +207,7 @@ static void ASAudioSessionInterruptionListener(__unused void * inClientData, UIn
     [[NSNotificationCenter defaultCenter] postNotificationName:ASAudioSessionInterruptionOccuredNotification object:@(inInterruptionState)];
 }
 
-#pragma mark CFReadStream Callback Function Implementations
+#pragma mark - CFReadStream Callback Function Implementations
 
 /**
  ReadStreamCallBack
@@ -227,6 +224,58 @@ static void ASReadStreamCallBack (CFReadStreamRef aStream, CFStreamEventType eve
     [streamer handleReadFromStream:aStream eventType:eventType];
 }
 
+#pragma mark - AudioRouteChange
+
+void audioRouteChangeListenerCallback (
+                                       void                      *inUserData,
+                                       AudioSessionPropertyID    inPropertyID,
+                                       UInt32                    inPropertyValueSize,
+                                       const void                *inPropertyValue) 
+{
+    // Code here
+    if (inPropertyID != kAudioSessionProperty_AudioRouteChange) return;
+    
+    GG977AudioStreamPlayer* streamer = (__bridge GG977AudioStreamPlayer *)inUserData;
+    
+    CFDictionaryRef routeChangeDictionary = inPropertyValue;
+    
+    CFNumberRef routeChangeReasonRef =
+    CFDictionaryGetValue (
+                          routeChangeDictionary,
+                          CFSTR (kAudioSession_AudioRouteChangeKey_Reason));
+    
+    SInt32 routeChangeReason;
+    
+    CFNumberGetValue (
+                      routeChangeReasonRef,
+                      kCFNumberSInt32Type,
+                      &routeChangeReason);
+    
+    CFStringRef oldRouteRef =
+    CFDictionaryGetValue (
+                          routeChangeDictionary,
+                          CFSTR (kAudioSession_AudioRouteChangeKey_OldRoute));
+    
+    NSString *oldRouteString = (__bridge NSString *)oldRouteRef;
+    
+    if (routeChangeReason == kAudioSessionRouteChangeReason_NewDeviceAvailable)
+    {
+        if ([oldRouteString isEqualToString:@"Speaker"])
+        {
+//            [controller.audioPlayer play];
+        }
+    }
+    
+    if (routeChangeReason ==
+        kAudioSessionRouteChangeReason_OldDeviceUnavailable)
+    {
+        if ((([oldRouteString isEqualToString:@"Headphone"]) ||
+             ([oldRouteString isEqualToString:@"LineOut"])))
+        {
+            [streamer stop];
+        }
+    }
+}
 
 @implementation GG977AudioStreamPlayer {
     NSURL *_url;     // URL стрима
@@ -289,25 +338,38 @@ static void ASReadStreamCallBack (CFReadStreamRef aStream, CFStreamEventType eve
     double                          _packetDuration;	// sample rate times frames per packet
     double                          _lastProgress;		// last calculated progress point
     
-    BOOL                            _pausedByInterruption;
+//    BOOL                            _pausedByInterruption;
 }
 
 #pragma mark - init
 
-- (id)initWithURL:(NSURL *)url
+- (id)initWithStation:(GG977StationInfo *)station
 {
     self = [super init];
     if (self != nil)
     {
-        _url = url;
+        NSLog(@"PLAYER - INIT");
+        NSLog(@"%@", station);
+        _station = station;
+#warning delete _url
+        _url = _station.url;
         [[NSNotificationCenter defaultCenter] addObserver:self selector:@selector(handleInterruptionChangeToState:) name:ASAudioSessionInterruptionOccuredNotification object:nil];
+        
+//        [[NSNotificationCenter defaultCenter] addObserver:self
+//                                                 selector:@selector(routeChanged:)
+//                                                     name:AVAudioSessionRouteChangeNotification
+//                                                   object:nil];
     }
     return self;
 }
 
 - (void)dealloc
 {
+    NSLog(@"PLAYER - DEALLOC");
     [[NSNotificationCenter defaultCenter] removeObserver:self name:ASAudioSessionInterruptionOccuredNotification object:nil];
+    
+//    [[NSNotificationCenter defaultCenter] removeObserver:self name:name:AVAudioSessionRouteChangeNotification object:nil];
+    
     [self stop];
 }
 
@@ -708,6 +770,12 @@ static void ASReadStreamCallBack (CFReadStreamRef aStream, CFStreamEventType eve
                                  sizeof (sessionCategory),
                                  &sessionCategory
                                  );
+        
+        AudioSessionAddPropertyListener (
+                                         kAudioSessionProperty_AudioRouteChange,
+                                         audioRouteChangeListenerCallback,
+                                         (__bridge void *)(self));
+        
         AudioSessionSetActive(true);
         
         // initialize a mutex and condition so that we can block on buffers in use.
@@ -933,22 +1001,30 @@ static void ASReadStreamCallBack (CFReadStreamRef aStream, CFStreamEventType eve
                 (AudioQueuePropertyID) [notification.object unsignedIntValue];
     if (inInterruptionState == kAudioSessionBeginInterruption)
     {
-        if ([self isPlaying]) {
-            [self pause];
+//        if ([self isPlaying]) {
+//            [self pause];
+            [self stop];
 
-            _pausedByInterruption = YES;
-        }
+//            _pausedByInterruption = YES;
+//        }
     }
-    else if (inInterruptionState == kAudioSessionEndInterruption)
-    {
-        AudioSessionSetActive(true);
+//    else if (inInterruptionState == kAudioSessionEndInterruption)
+//    {
+//        AudioSessionSetActive(true);
+//
+//        if ([self isPaused] && _pausedByInterruption) {
+//            [self start]; // this is actually resume
+//
+//            _pausedByInterruption = NO; // this is redundant
+//        }
+//    }
+}
 
-        if ([self isPaused] && _pausedByInterruption) {
-            [self pause]; // this is actually resume
-
-            _pausedByInterruption = NO; // this is redundant
-        }
-    }
+/**
+ 
+ */
+- (void)routeChanged:(NSNotification *)notification {
+    NSLog(@"%@", notification);
 }
 
 #pragma mark - Errors handing
@@ -1249,7 +1325,7 @@ static void ASReadStreamCallBack (CFReadStreamRef aStream, CFStreamEventType eve
                      fileStreamPropertyID:(AudioFileStreamPropertyID)inPropertyID
                                   ioFlags:(UInt32 *)ioFlags
 {
-    //    NSLog(@"handlePropertyChangeForFileStream");
+    NSLog(@"handlePropertyChangeForFileStream");
     @synchronized(self)
     {
         if ([self isFinishing])
@@ -1259,10 +1335,12 @@ static void ASReadStreamCallBack (CFReadStreamRef aStream, CFStreamEventType eve
         
         if (inPropertyID == kAudioFileStreamProperty_ReadyToProducePackets)
         {
+            NSLog(@"kAudioFileStreamProperty_ReadyToProducePackets");
             _discontinuous = true;
         }
         else if (inPropertyID == kAudioFileStreamProperty_DataOffset)
         {
+            NSLog(@"kAudioFileStreamProperty_DataOffset");
             SInt64 offset;
             UInt32 offsetSize = sizeof(offset);
             _err = AudioFileStreamGetProperty(inAudioFileStream, kAudioFileStreamProperty_DataOffset, &offsetSize, &offset);
@@ -1272,14 +1350,16 @@ static void ASReadStreamCallBack (CFReadStreamRef aStream, CFStreamEventType eve
                 return;
             }
             _dataOffset = offset;
-            
+            NSLog(@"_dataOffset = %d", _dataOffset);
             if (_audioDataByteCount)
             {
                 _fileLength = _dataOffset + _audioDataByteCount;
+                NSLog(@"_fileLength = %d", _fileLength);
             }
         }
         else if (inPropertyID == kAudioFileStreamProperty_AudioDataByteCount)
         {
+            NSLog(@"kAudioFileStreamProperty_AudioDataByteCount");
             UInt32 byteCountSize = sizeof(UInt64);
             _err = AudioFileStreamGetProperty(inAudioFileStream, kAudioFileStreamProperty_AudioDataByteCount, &byteCountSize, &_audioDataByteCount);
             if (_err)
@@ -1288,11 +1368,23 @@ static void ASReadStreamCallBack (CFReadStreamRef aStream, CFStreamEventType eve
                 return;
             }
             _fileLength = _dataOffset + _audioDataByteCount;
+            NSLog(@"_fileLength = %d", _fileLength);
         }
         else if (inPropertyID == kAudioFileStreamProperty_DataFormat)
         {
+            NSLog(@"kAudioFileStreamProperty_DataFormat");
             if (_asbd.mSampleRate == 0)
             {
+                NSLog(@"mBitsPerChannel = %d", (unsigned int)_asbd.mBitsPerChannel);
+                NSLog(@"mBytesPerFrame = %d", (unsigned int)_asbd.mBytesPerFrame);
+                NSLog(@"mBytesPerPacket = %d", (unsigned int)_asbd.mBytesPerPacket);
+                NSLog(@"mChannelsPerFrame = %d", (unsigned int)_asbd.mChannelsPerFrame);
+                NSLog(@"mFormatFlags = %d", (unsigned int)_asbd.mFormatFlags);
+                NSLog(@"mFormatID = %d", (unsigned int)_asbd.mFormatID);
+                NSLog(@"mFramesPerPacket = %d", (unsigned int)_asbd.mFramesPerPacket);
+                NSLog(@"mReserved = %d", (unsigned int)_asbd.mReserved);
+                NSLog(@"mSampleRate = %d", (unsigned int)_asbd.mSampleRate);
+                
                 UInt32 asbdSize = sizeof(_asbd);
                 
                 // get the stream format.
@@ -1303,9 +1395,20 @@ static void ASReadStreamCallBack (CFReadStreamRef aStream, CFStreamEventType eve
                     return;
                 }
             }
+            
+            NSLog(@"mBitsPerChannel = %d", (unsigned int)_asbd.mBitsPerChannel);
+            NSLog(@"mBytesPerFrame = %d", (unsigned int)_asbd.mBytesPerFrame);
+            NSLog(@"mBytesPerPacket = %d", (unsigned int)_asbd.mBytesPerPacket);
+            NSLog(@"mChannelsPerFrame = %d", (unsigned int)_asbd.mChannelsPerFrame);
+            NSLog(@"mFormatFlags = %d", (unsigned int)_asbd.mFormatFlags);
+            NSLog(@"mFormatID = %d", (unsigned int)_asbd.mFormatID);
+            NSLog(@"mFramesPerPacket = %d", (unsigned int)_asbd.mFramesPerPacket);
+            NSLog(@"mReserved = %d", (unsigned int)_asbd.mReserved);
+            NSLog(@"mSampleRate = %d", (unsigned int)_asbd.mSampleRate);
         }
         else if (inPropertyID == kAudioFileStreamProperty_FormatList)
         {
+            NSLog(@"kAudioFileStreamProperty_FormatList");
             Boolean outWriteable;
             UInt32 formatListSize;
             _err = AudioFileStreamGetPropertyInfo(inAudioFileStream, kAudioFileStreamProperty_FormatList, &formatListSize, &outWriteable);
@@ -1328,6 +1431,8 @@ static void ASReadStreamCallBack (CFReadStreamRef aStream, CFStreamEventType eve
             {
                 AudioStreamBasicDescription pasbd = formatList[i].mASBD;
                 
+                NSLog(@"%d pasbd.mFormatID = %d", i, (unsigned int)pasbd.mFormatID);
+                
                 if (pasbd.mFormatID == kAudioFormatMPEG4AAC_HE ||
                     pasbd.mFormatID == kAudioFormatMPEG4AAC_HE_V2)
                 {
@@ -1345,11 +1450,7 @@ static void ASReadStreamCallBack (CFReadStreamRef aStream, CFStreamEventType eve
         }
         else
         {
-            //			NSLog(@"Property is %c%c%c%c",
-            //				((char *)&inPropertyID)[3],
-            //				((char *)&inPropertyID)[2],
-            //				((char *)&inPropertyID)[1],
-            //				((char *)&inPropertyID)[0]);
+            NSLog(@"Property is %c%c%c%c", ((char *)&inPropertyID)[3], ((char *)&inPropertyID)[2], ((char *)&inPropertyID)[1], ((char *)&inPropertyID)[0]);
         }
     }
 }

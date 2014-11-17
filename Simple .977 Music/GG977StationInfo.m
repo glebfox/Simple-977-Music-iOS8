@@ -10,22 +10,21 @@
 
 @implementation GG977StationInfo
 
-- (id)initWithTitle:(NSString *)title url:(NSURL *)url
-{
+- (id)initWithTitle:(NSString *)title {
     if ((self = [super init])) {
         _title = [title copy];
-        _url = [url copy];
+        _externalID = 0;
     }
     return self;
 }
 
 #pragma mark NSObject
 
-- (NSString *)description
-{
+- (NSString *)description {
     NSMutableString *description = [[NSMutableString alloc] initWithString:[self.class description]];
     if (self.title) [description appendFormat:@" - %@", self.title];
     if (self.url) [description appendFormat:@" - %@", [self.url absoluteString]];
+    if (self.externalID) [description appendFormat:@" - %lu", (unsigned long)self.externalID];
     
     return description;
 }
@@ -35,7 +34,11 @@
     if (object == self) return true;
     if ([object class] != [GG977StationInfo class]) return false;
     GG977StationInfo *obj = (GG977StationInfo *)object;
-    return [self.title isEqualToString:obj.title] && [self.url isEqual:obj.url];
+    return [self.title isEqualToString:obj.title] && [self.url isEqual:obj.url] && self.externalID == obj.externalID;
+}
+
+- (NSComparisonResult)compare:(GG977StationInfo *)otherStationInfo {
+    return [self.title localizedStandardCompare:otherStationInfo.title];
 }
 
 @end

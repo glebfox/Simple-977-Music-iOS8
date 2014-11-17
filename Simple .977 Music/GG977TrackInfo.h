@@ -12,5 +12,9 @@
 
 @property (nonatomic, copy) NSString *artist;
 @property (nonatomic, copy) NSString *track;
+@property (nonatomic, copy) NSString *album;
+@property (nonatomic, copy) NSURL *imageUrl;
+@property (nonatomic, copy) NSString *year;
+@property (nonatomic, copy) NSString *lyrics;
 
 @end

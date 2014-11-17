@@ -11,15 +11,18 @@
 #import <MediaPlayer/MediaPlayer.h>
 #import "AppDelegate.h"
 #import "GG977TrackInfo.h"
+#import "GG977DetailTrackInfoViewController.h"
 
 @interface GG977PlayerViewController ()
 
 @property (strong, nonatomic) GG977AudioStreamPlayer *player;
 
-@property (weak, nonatomic) IBOutlet UIButton *playPauseButton;
-@property (weak, nonatomic) IBOutlet UILabel *artistInfo;
-@property (weak, nonatomic) IBOutlet UILabel *trackInfo;
-@property (weak, nonatomic) IBOutlet UILabel *stationTitle;
+@property (strong, nonatomic) GG977TrackInfo *trackInfo;
+
+@property (weak, nonatomic) IBOutlet UIButton *playStopButton;
+@property (weak, nonatomic) IBOutlet UILabel *artistInfoLabel;
+@property (weak, nonatomic) IBOutlet UILabel *trackInfoLabel;
+@property (weak, nonatomic) IBOutlet UILabel *stationTitleLabel;
 @property (weak, nonatomic) IBOutlet MPVolumeView *volumeView;
 @property (weak, nonatomic) IBOutlet UIImageView *imageView;
 
@@ -70,10 +73,10 @@
     [self syncPlayPauseButton];
     
     if (self.stationInfo != nil) {
-        self.stationTitle.text = self.stationInfo.title;
+        self.stationTitleLabel.text = self.stationInfo.title;
         self.imageView.image = [UIImage imageNamed:_stationInfo.title];
     } else {
-        self.stationTitle.text = NSLocalizedString(@"No Station Title", nil);
+        self.stationTitleLabel.text = NSLocalizedString(@"No Station Title", nil);
     }
     
     if ([self.player isIdle]) {
@@ -82,12 +85,12 @@
     
     if (self.playerBeginConnection) {
         NSLog(@"viewDidLoad - Connecting...");
-        self.trackInfo.text = NSLocalizedString(@"Connecting...", nil);
+        self.trackInfoLabel.text = NSLocalizedString(@"Connecting...", nil);
     }
     
     if ([self.player isPlaying]) {
-        self.trackInfo.text = [[[MPNowPlayingInfoCenter defaultCenter] nowPlayingInfo] objectForKey:MPMediaItemPropertyTitle];
-        self.artistInfo.text = [[[MPNowPlayingInfoCenter defaultCenter] nowPlayingInfo] objectForKey:MPMediaItemPropertyArtist];
+        self.trackInfoLabel.text = [[[MPNowPlayingInfoCenter defaultCenter] nowPlayingInfo] objectForKey:MPMediaItemPropertyTitle];
+        self.artistInfoLabel.text = [[[MPNowPlayingInfoCenter defaultCenter] nowPlayingInfo] objectForKey:MPMediaItemPropertyArtist];
         [self syncPlayPauseButton];
         [self enablePlayerButtons];
     }
@@ -108,17 +111,19 @@
     if (![_stationInfo isEqual:stationInfo]) {
         _stationInfo = stationInfo;
     
-        self.stationTitle.text = _stationInfo.title;
+        self.stationTitleLabel.text = _stationInfo.title;
         self.imageView.image = [UIImage imageNamed:_stationInfo.title];
         
         if (self.player != nil) {
             [self.player stop];
         }
-        self.player = [[GG977AudioStreamPlayer alloc] initWithURL:_stationInfo.url];
+        self.player = [[GG977AudioStreamPlayer alloc] initWithStation:_stationInfo];
         self.player.delegate = self;
         self.playerBeginConnection = NO;
 
-//        [self.player startNewConnectionWithUrl:_stationInfo.url];
+        if ([self.player isIdle]) {
+            [self playerDidPrepareForPlayback:nil];
+        }
     }
 }
 
@@ -131,27 +136,27 @@
 - (void)clearTrackInfoLabels
 {
 //    NSLog(@"clearTrackInfoLabels");
-    self.artistInfo.text = @"";
-    self.trackInfo.text = @"";
+    self.artistInfoLabel.text = @"";
+    self.trackInfoLabel.text = @"";
 }
 
 - (void)syncPlayPauseButton
 {
 //    NSLog(@"syncPlayPauseButton");
-    UIImage *image = [[UIImage imageNamed: [self playerShouldBeStopped] ? @"pause" : @"play"]imageWithRenderingMode:UIImageRenderingModeAlwaysTemplate];
-    [self.playPauseButton setImage: image forState:UIControlStateNormal];
+    UIImage *image = [[UIImage imageNamed: [self playerShouldBeStopped] ? @"stop" : @"play"]imageWithRenderingMode:UIImageRenderingModeAlwaysTemplate];
+    [self.playStopButton setImage: image forState:UIControlStateNormal];
 }
 
 -(void)enablePlayerButtons
 {
 //    NSLog(@"enablePlayerButtons");
-    self.playPauseButton.enabled = YES;
+    self.playStopButton.enabled = YES;
 }
 
 -(void)disablePlayerButtons
 {
 //    NSLog(@"disablePlayerButtons");
-    self.playPauseButton.enabled = NO;
+    self.playStopButton.enabled = NO;
 }
 
 #pragma mark - Button Action Methods
@@ -166,10 +171,10 @@
     }
 }
 
-#warning test only
-- (IBAction)pause:(id)sender {
-    [self.player pause];
-}
+//#warning test only
+//- (IBAction)pause:(id)sender {
+//    [self.player pause];
+//}
 
 #pragma mark - GG977AudioStreamPlayerDelegate
 
@@ -182,7 +187,7 @@
     [self syncPlayPauseButton];
     
     [self clearTrackInfoLabels];
-    self.trackInfo.text = NSLocalizedString(@"Connecting...", nil);
+    self.trackInfoLabel.text = NSLocalizedString(@"Connecting...", nil);
 }
 
 - (void)player:(GG977AudioStreamPlayer *)player failedToPrepareForPlaybackWithError:(NSError *)error {
@@ -208,7 +213,10 @@
     [self enablePlayerButtons];
     [self clearTrackInfoLabels];
     
-    self.trackInfo.text = NSLocalizedString(@"Press play button to listen", nil);
+    self.trackInfoLabel.text = NSLocalizedString(@"Press play button to listen", nil);
+    
+#warning test only
+    [self parseTrackFromStationID:self.stationInfo.externalID];
     
 //    [self.player start];
 }
@@ -223,7 +231,7 @@
     [self syncPlayPauseButton];
     
     [self clearTrackInfoLabels];
-    self.trackInfo.text = _stationInfo.title;
+    self.trackInfoLabel.text = _stationInfo.title;
 }
 
 - (void)playerDidPausePlaying:(GG977AudioStreamPlayer *)player {
@@ -247,14 +255,18 @@
 }
 
 - (void)playerDidStartReceivingTrackInfo:(GG977AudioStreamPlayer *)player {
-    self.trackInfo.text = NSLocalizedString(@"Getting metadata...", nil);
+    self.trackInfoLabel.text = NSLocalizedString(@"Getting metadata...", nil);
 }
 
 - (void)player:(GG977AudioStreamPlayer *)player didReceiveTrackInfo:(GG977TrackInfo *)info {
     NSLog(@"didReceiveTrackInfo");
     
-    self.artistInfo.text = info.artist;
-    self.trackInfo.text = info.track;
+    self.trackInfo = info;
+    
+    self.artistInfoLabel.text = info.artist;
+    self.trackInfoLabel.text = info.track;
+    
+    self.imageView.image = [UIImage imageWithData:[NSData dataWithContentsOfURL:info.imageUrl]];
 }
 
 #pragma mark - AppRemoteControlDelegate
@@ -273,6 +285,63 @@
                 break;
         }
     }
+}
+
+#pragma mark - Navigation
+
+// In a storyboard-based application, you will often want to do a little preparation before navigation
+- (void)prepareForSegue:(UIStoryboardSegue *)segue sender:(id)sender
+{
+    if ([[segue identifier] isEqualToString:@"ShowTrackDetail"]) {
+        UINavigationController *navController = (UINavigationController *)segue.destinationViewController;
+        GG977DetailTrackInfoViewController *controller = (GG977DetailTrackInfoViewController *)navController.topViewController;
+        controller.trackInfo = self.trackInfo;
+    }
+}
+
+- (void)parseTrackFromStationID:(NSUInteger)externalID {
+    NSURL *url = [NSURL URLWithString:[NSString stringWithFormat:@"http://androidfm.org/977music/api/metadata/%d/", externalID]];
+    
+    NSMutableURLRequest *request = [[NSMutableURLRequest alloc] initWithURL:url cachePolicy:NSURLRequestReloadIgnoringLocalAndRemoteCacheData timeoutInterval:60];
+    
+    [NSURLConnection sendAsynchronousRequest:request queue:[NSOperationQueue mainQueue] completionHandler:^(NSURLResponse *response, NSData *data, NSError *connectionError) {
+        if (connectionError) {
+            NSLog(@"CONNECTION ERROR: %@", connectionError);
+        } else {
+            NSError *error;
+            NSDictionary *dic;
+            id jsonResult = [NSJSONSerialization JSONObjectWithData:data options:kNilOptions error:&error];
+//            if ([jsonResult class] == [NSCFDictionary class]) {
+                dic = jsonResult;
+//            } else {
+//                self.trackInfo = nil;
+//                return;
+//            }
+            
+            if (error) {
+                NSLog(@"JSON ERROR: %@", error);
+                self.trackInfo = nil;
+            } else {
+                self.trackInfo = [GG977TrackInfo new];
+                self.trackInfo.artist = dic[@"artist"];
+                self.trackInfo.track = dic[@"name"];
+                
+                NSString *urlString = dic[@"img_url"];
+                if (urlString != nil && [urlString class] != [NSNull class]) {
+                    self.trackInfo.imageUrl = [NSURL URLWithString:[urlString stringByAddingPercentEscapesUsingEncoding:NSASCIIStringEncoding]];
+                }
+                
+                NSString *str = dic[@"album"];
+                if (str != nil && [str class] != [NSNull class]) {
+                    NSArray *array = [str componentsSeparatedByCharactersInSet:[NSCharacterSet characterSetWithCharactersInString:@"()"]];
+                    self.trackInfo.album = array[0];
+                    if ([array count] > 1) self.trackInfo.year = array[1];
+                }
+                
+                self.trackInfo.lyrics = dic[@"lyrics"];
+            }
+        }
+    }];
 }
 
 @end

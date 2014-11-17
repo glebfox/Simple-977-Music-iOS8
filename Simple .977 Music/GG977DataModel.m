@@ -27,10 +27,17 @@
         NSMutableArray *stations = [NSMutableArray new];
         
         for (NSString *key in keys) {
-            [stations addObject:[[GG977StationInfo alloc] initWithTitle:key url:[NSURL URLWithString:stationsDic[key]]]];
+            [stations addObject:[[GG977StationInfo alloc] initWithTitle:key]];
+            
+            NSDictionary *currentStationInfo = stationsDic[key];
+            
+            [[stations lastObject] setUrl:[NSURL URLWithString:currentStationInfo[@"url"]]];
+            NSNumber *number = (NSNumber *)currentStationInfo[@"id"];
+            [[stations lastObject] setExternalID:[number integerValue]];
         }
         
-        _allStations = [NSArray arrayWithArray:stations];
+        [stations sortUsingSelector:@selector(compare:)];
+        _allStations = [stations copy];
     }
     return self;
 }

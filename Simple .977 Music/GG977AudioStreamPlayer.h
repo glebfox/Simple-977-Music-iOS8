@@ -9,6 +9,8 @@
 #import <UIKit/UIKit.h>
 #import <AudioToolbox/AudioToolbox.h>
 
+@class GG977StationInfo;
+
 @class GG977AudioStreamPlayer;
 
 @protocol GG977AudioStreamPlayerDelegate <NSObject>
@@ -30,7 +32,7 @@
 
 @property (nonatomic, weak) id<GG977AudioStreamPlayerDelegate> delegate;
 
-- (id)initWithURL:(NSURL *)url;
+- (id)initWithStation:(GG977StationInfo *)station;
 
 - (void)start;
 - (void)stop;
@@ -43,4 +45,4 @@
 
 @end
 
-extern NSString * const ASStatusChangedNotification;
+//extern NSString * const ASStatusChangedNotification;

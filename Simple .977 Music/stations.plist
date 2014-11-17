@@ -2,31 +2,82 @@
 <!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
 <plist version="1.0">
 <dict>
-	<key>80s</key>
-	<string>http://www.977music.com/itunes/80s.pls</string>
 	<key>Hitz</key>
-	<string>http://www.977music.com/itunes/hitz.pls</string>
-	<key>Oldies</key>
-	<string>http://www.977music.com/itunes/oldies.pls</string>
-	<key>Classic Rock</key>
-	<string>http://www.977music.com/itunes/classicrock.pls</string>
-	<key>Alternative</key>
-	<string>http://www.977music.com/itunes/alternative.pls</string>
-	<key>Country</key>
-	<string>http://www.977music.com/977hicountry.pls</string>
-	<key>Smooth Jazz</key>
-	<string>http://www.977music.com/itunes/jazz.pls</string>
-	<key>Mix</key>
-	<string>http://www.977music.com/itunes/mix.pls</string>
+	<dict>
+		<key>url</key>
+		<string>http://7659.live.streamtheworld.com/977_HITSAAC_SC</string>
+		<key>id</key>
+		<integer>6</integer>
+	</dict>
+	<key>80s</key>
+	<dict>
+		<key>url</key>
+		<string>http://7609.live.streamtheworld.com/977_80AAC_SC</string>
+		<key>id</key>
+		<integer>23</integer>
+	</dict>
 	<key>Jamz</key>
-	<string>http://www.977music.com/itunes/jamz.pls</string>
-	<key>Comedy</key>
-	<string>http://www.977music.com/itunes/comedy.pls</string>
+	<dict>
+		<key>url</key>
+		<string>http://7669.live.streamtheworld.com:443/977_JAMZAAC_SC</string>
+		<key>id</key>
+		<integer>30</integer>
+	</dict>
 	<key>90s</key>
-	<string>http://www.977music.com/itunes/90s.pls</string>
-	<key>Test</key>
-	<string>http://shoutmedia.abc.net.au:10326</string>
-	<key>Alternative Test</key>
-	<string>http://7669.live.streamtheworld.com:80/977_ALTERNAAC_SC</string>
+	<dict>
+		<key>url</key>
+		<string>http://7659.live.streamtheworld.com/977_90AAC_SC</string>
+		<key>id</key>
+		<integer>24</integer>
+	</dict>
+	<key>Oldies</key>
+	<dict>
+		<key>url</key>
+		<string>http://7669.live.streamtheworld.com:443/977_OLDIESAAC_SC</string>
+		<key>id</key>
+		<integer>27</integer>
+	</dict>
+	<key>Alternative</key>
+	<dict>
+		<key>url</key>
+		<string>http://7659.live.streamtheworld.com/977_ALTERNAAC_SC</string>
+		<key>id</key>
+		<integer>10</integer>
+	</dict>
+	<key>Smooth Jazz</key>
+	<dict>
+		<key>url</key>
+		<string>http://7609.live.streamtheworld.com:443/977_SMOOJAZZAAC_SC</string>
+		<key>id</key>
+		<integer>29</integer>
+	</dict>
+	<key>Comedy</key>
+	<dict>
+		<key>url</key>
+		<string>http://7649.live.streamtheworld.com/977_COMEDYAAC_SC</string>
+		<key>id</key>
+		<integer>28</integer>
+	</dict>
+	<key>Mix</key>
+	<dict>
+		<key>url</key>
+		<string>http://7669.live.streamtheworld.com:443/977_MIXAAC_SC</string>
+		<key>id</key>
+		<string>26</string>
+	</dict>
+	<key>Classic Rock</key>
+	<dict>
+		<key>url</key>
+		<string>http://7609.live.streamtheworld.com/977_CLASSROCKAAC_SC</string>
+		<key>id</key>
+		<integer>25</integer>
+	</dict>
+	<key>Country</key>
+	<dict>
+		<key>url</key>
+		<string>http://7649.live.streamtheworld.com:443/977_COUNTRYAAC_SC</string>
+		<key>id</key>
+		<integer>19</integer>
+	</dict>
 </dict>
 </plist>
