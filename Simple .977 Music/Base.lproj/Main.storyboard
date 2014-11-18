@@ -137,6 +137,7 @@
                     <navigationItem key="navigationItem" title=".977 Music" id="Igk-6T-K5V"/>
                     <connections>
                         <outlet property="artistInfoLabel" destination="Uty-tr-5Uk" id="cMA-9B-8YY"/>
+                        <outlet property="backgroundImage" destination="L7f-Z5-hg3" id="1gL-1e-xPg"/>
                         <outlet property="imageView" destination="CfG-XP-O9H" id="W2F-fb-Byy"/>
                         <outlet property="playStopButton" destination="WRl-td-K3M" id="Pvz-6S-PoL"/>
                         <outlet property="spinner" destination="Ywm-aW-Lau" id="Zao-Gz-XUy"/>

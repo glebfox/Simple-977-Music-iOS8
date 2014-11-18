@@ -26,9 +26,7 @@
 @property (weak, nonatomic) IBOutlet MPVolumeView *volumeView;
 @property (weak, nonatomic) IBOutlet UIImageView *imageView;
 @property (weak, nonatomic) IBOutlet UIActivityIndicatorView *spinner;
-
-@property (assign, nonatomic) BOOL playerBeginConnection;
-@property (assign, nonatomic) BOOL playerBuffering;
+@property (weak, nonatomic) IBOutlet UIImageView *backgroundImage;
 
 @end
 
@@ -58,7 +56,6 @@
 }
 
 - (void)gg977PlayerViewControllerInit {
-//    NSLog(@"gg977PlayerViewControllerInit");
     
     AppDelegate *appDelegate = (AppDelegate *)[[UIApplication sharedApplication] delegate];
     appDelegate.delegate = self;
@@ -68,7 +65,6 @@
 
 - (void)viewDidLoad {
     [super viewDidLoad];
-//    NSLog(@"GG977PlayerViewController - viewDidLoad");
     
     [self disablePlayerButtons];
     [self clearTrackInfoLabels];
@@ -78,7 +74,7 @@
         [self playerDidPrepareForPlayback:nil];
     }
     
-    if (self.playerBeginConnection) {
+    if ([self.player isWaiting]) {
         NSLog(@"viewDidLoad - Connecting...");
         self.trackInfoLabel.text = NSLocalizedString(@"Connecting...", nil);
     }
@@ -100,7 +96,6 @@
 
 - (void)setStationInfo:(GG977StationInfo *)stationInfo
 {
-//    NSLog(@"setStationInfo");
 //    [[MPNowPlayingInfoCenter defaultCenter] setNowPlayingInfo:nil];
     
     if (![_stationInfo isEqual:stationInfo]) {
@@ -114,7 +109,6 @@
         }
         self.player = [[GG977AudioStreamPlayer alloc] initWithStation:_stationInfo];
         self.player.delegate = self;
-        self.playerBeginConnection = NO;
 
         if ([self.player isIdle]) {
             [self playerDidPrepareForPlayback:nil];
@@ -125,12 +119,11 @@
 #pragma mark - UI Updates
 
 - (BOOL)playerShouldBeStopped {
-    return [self.player isPlaying] || self.playerBeginConnection || self.playerBuffering;
+    return [self.player isPlaying] || [self.player isWaiting];
 }
 
 - (void)clearTrackInfoLabels
 {
-//    NSLog(@"clearTrackInfoLabels");
     self.artistInfoLabel.text = @"";
     self.trackInfoLabel.text = @"";
 
@@ -144,20 +137,17 @@
 
 - (void)syncPlayPauseButton
 {
-//    NSLog(@"syncPlayPauseButton");
     UIImage *image = [[UIImage imageNamed: [self playerShouldBeStopped] ? @"stop" : @"play"]imageWithRenderingMode:UIImageRenderingModeAlwaysTemplate];
     [self.playStopButton setImage: image forState:UIControlStateNormal];
 }
 
 -(void)enablePlayerButtons
 {
-//    NSLog(@"enablePlayerButtons");
     self.playStopButton.enabled = YES;
 }
 
 -(void)disablePlayerButtons
 {
-//    NSLog(@"disablePlayerButtons");
     self.playStopButton.enabled = NO;
 }
 
@@ -165,7 +155,6 @@
 
 - (IBAction)playPause:(id)sender
 {
-//    [self.player togglePlayPause];
     if ([self playerShouldBeStopped]) {
         [self.player stop];
     } else {
@@ -177,21 +166,18 @@
 
 #pragma mark - GG977AudioStreamPlayerDelegate
 
-- (void)playerDidBeginConnection:(GG977AudioStreamPlayer *)player {
-//    NSLog(@"playerDidBeginConnection");
-    
-    self.playerBeginConnection = YES;
-    
-//    [self disablePlayerButtons];
+- (void)playerBeginConnection:(GG977AudioStreamPlayer *)player {
     [self syncPlayPauseButton];
     
     [self clearTrackInfoLabels];
     self.trackInfoLabel.text = NSLocalizedString(@"Connecting...", nil);
 }
 
+- (void)playerBeginBuffering:(GG977AudioStreamPlayer *)player {
+
+}
+
 - (void)player:(GG977AudioStreamPlayer *)player failedToPrepareForPlaybackWithError:(NSError *)error {
-//    NSLog(@"playerFailedToPrepareForPlayback");
-    
     self.stationInfo = nil;
     
     [self disablePlayerButtons];
@@ -218,40 +204,15 @@
 }
 
 - (void)playerDidStartPlaying:(GG977AudioStreamPlayer *)player {
-//    NSLog(@"playerDidStartPlaying");
-    
-    if (self.playerBeginConnection) {
-        self.playerBeginConnection = NO;
-    }
-    
     [self syncPlayPauseButton];
-    
-//    [self clearTrackInfoLabels];
-//    self.trackInfoLabel.text = _stationInfo.title;
 }
 
 - (void)playerDidPausePlaying:(GG977AudioStreamPlayer *)player {
-//    NSLog(@"playerDidPausePlaying");
-    
-    if (self.playerBeginConnection) {
-        self.playerBeginConnection = NO;
-    }
-    
     [self syncPlayPauseButton];
 }
 
 - (void)playerDidStopPlaying:(GG977AudioStreamPlayer *)player {
-//    NSLog(@"playerDidStopPlaying");
-    
-    if (self.playerBeginConnection) {
-        self.playerBeginConnection = NO;
-    }
-    
     [self syncPlayPauseButton];
-}
-
-- (void)playerDidStartReceivingTrackInfo:(GG977AudioStreamPlayer *)player {
-    self.trackInfoLabel.text = NSLocalizedString(@"Getting metadata...", nil);
 }
 
 - (void)player:(GG977AudioStreamPlayer *)player didReceiveTrackInfo:(GG977TrackInfo *)info {

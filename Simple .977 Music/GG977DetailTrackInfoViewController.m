@@ -50,7 +50,9 @@
         self.trackLabel.text = self.trackInfo.track;
         self.albumName.text = self.trackInfo.album;
         self.year.text = self.trackInfo.year;
-        [self.lyricsWebView loadHTMLString:self.trackInfo.lyrics baseURL:nil];
+        UIFont *font = [UIFont systemFontOfSize:[UIFont systemFontSize]];
+        NSString *html = [self htmlStringWithFont:(UIFont *)font];
+        [self.lyricsWebView loadHTMLString:html baseURL:nil];
     } else {
         self.albumImage.image = [UIImage imageNamed:@"EmptyLogo"];
         self.artistLabel.text = @"";
@@ -59,6 +61,13 @@
         self.year.text = @"";
         [self.lyricsWebView loadHTMLString:@"" baseURL:nil];
     }
+}
+
+- (NSString *)htmlStringWithFont:(UIFont *)font {
+    return [NSString stringWithFormat:@"<html><head><style type=\"text/css\">"
+                      "body {font-family: \"%@\"; font-size: %f; margin: 0;}</style>"
+                      "</head><body>%@</body></html>",
+                      font.fontName, font.pointSize, self.trackInfo.lyrics];
 }
 
 @end
