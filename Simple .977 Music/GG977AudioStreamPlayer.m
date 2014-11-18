@@ -12,7 +12,7 @@
 #include <pthread.h>
 #import "GG977StationInfo.h"
 
-#define LOG_QUEUED_BUFFERS 0
+//#define LOG_QUEUED_BUFFERS 0
 
 const int NUM_AQ_BUFS = 16;
 const int AQ_DEFAULT_BUF_SIZE = 2048;
@@ -21,7 +21,7 @@ const int AQ_MAX_PACKET_DESCS = 512;
 const int BIT_RATE_ESTIMATION_MAX_PACKETS = 5000;
 const int BIT_RATE_ESTIMATION_MIN_PACKETS = 50;
 
-NSString * const ASStatusChangedNotification = @"ASStatusChangedNotification";
+//NSString * const ASStatusChangedNotification = @"ASStatusChangedNotification";
 NSString * const ASAudioSessionInterruptionOccuredNotification = @"ASAudioSessionInterruptionOccuredNotification";
 
 NSString * const AS_NO_ERROR_STRING = @"No error.";
@@ -54,56 +54,61 @@ NSString * const AS_AUDIO_BUFFER_TOO_SMALL_STRING = @"Audio packets are larger t
 
 typedef enum
 {
-    AS_INITIALIZED = 0,
-    AS_STARTING_FILE_THREAD,
-    AS_WAITING_FOR_DATA,
-    AS_FLUSHING_EOF,
-    AS_WAITING_FOR_QUEUE_TO_START,
-    AS_PLAYING,
-    AS_BUFFERING,
-    AS_STOPPING,
-    AS_STOPPED,
-    AS_PAUSED
-} AudioStreamerState;
+    ASP_INITIALIZED = 0,
+    ASP_STARTING_FILE_THREAD,
+    ASP_WAITING_FOR_DATA,
+    ASP_FLUSHING_EOF,
+    ASP_WAITING_FOR_QUEUE_TO_START,
+    ASP_PLAYING,
+    ASP_BUFFERING,
+    ASP_STOPPING,
+    ASP_STOPPED,
+    ASP_PAUSED
+} AudioStreamPlayerState;
 
 typedef enum
 {
-    AS_NO_STOP = 0,
-    AS_STOPPING_EOF,
-    AS_STOPPING_USER_ACTION,
-    AS_STOPPING_ERROR,
-    AS_STOPPING_TEMPORARILY
-} AudioStreamerStopReason;
+    ASP_NO_STOP = 0,
+    ASP_STOPPING_EOF,
+    ASP_STOPPING_USER_ACTION,
+    ASP_STOPPING_ERROR,
+    ASP_STOPPING_TEMPORARILY
+} AudioStreamPlayerStopReason;
 
 typedef enum
 {
-    AS_NO_ERROR = 0,
-    AS_NETWORK_CONNECTION_FAILED,
-    AS_FILE_STREAM_GET_PROPERTY_FAILED,
-    AS_FILE_STREAM_SET_PROPERTY_FAILED,
-    AS_FILE_STREAM_SEEK_FAILED,
-    AS_FILE_STREAM_PARSE_BYTES_FAILED,
-    AS_FILE_STREAM_OPEN_FAILED,
-    AS_FILE_STREAM_CLOSE_FAILED,
-    AS_AUDIO_DATA_NOT_FOUND,
-    AS_AUDIO_QUEUE_CREATION_FAILED,
-    AS_AUDIO_QUEUE_BUFFER_ALLOCATION_FAILED,
-    AS_AUDIO_QUEUE_ENQUEUE_FAILED,
-    AS_AUDIO_QUEUE_ADD_LISTENER_FAILED,
-    AS_AUDIO_QUEUE_REMOVE_LISTENER_FAILED,
-    AS_AUDIO_QUEUE_START_FAILED,
-    AS_AUDIO_QUEUE_PAUSE_FAILED,
-    AS_AUDIO_QUEUE_BUFFER_MISMATCH,
-    AS_AUDIO_QUEUE_DISPOSE_FAILED,
-    AS_AUDIO_QUEUE_STOP_FAILED,
-    AS_AUDIO_QUEUE_FLUSH_FAILED,
-    AS_AUDIO_STREAMER_FAILED,
-    AS_GET_AUDIO_TIME_FAILED,
-    AS_AUDIO_BUFFER_TOO_SMALL
-} AudioStreamerErrorCode;
+    ASP_NO_ERROR = 0,
+    ASP_NETWORK_CONNECTION_FAILED,
+    ASP_FILE_STREAM_GET_PROPERTY_FAILED,
+    ASP_FILE_STREAM_SET_PROPERTY_FAILED,
+    ASP_FILE_STREAM_SEEK_FAILED,
+    ASP_FILE_STREAM_PARSE_BYTES_FAILED,
+    ASP_FILE_STREAM_OPEN_FAILED,
+    ASP_FILE_STREAM_CLOSE_FAILED,
+    ASP_AUDIO_DATA_NOT_FOUND,
+    ASP_AUDIO_QUEUE_CREATION_FAILED,
+    ASP_AUDIO_QUEUE_BUFFER_ALLOCATION_FAILED,
+    ASP_AUDIO_QUEUE_ENQUEUE_FAILED,
+    ASP_AUDIO_QUEUE_ADD_LISTENER_FAILED,
+    ASP_AUDIO_QUEUE_REMOVE_LISTENER_FAILED,
+    ASP_AUDIO_QUEUE_START_FAILED,
+    ASP_AUDIO_QUEUE_PAUSE_FAILED,
+    ASP_AUDIO_QUEUE_BUFFER_MISMATCH,
+    ASP_AUDIO_QUEUE_DISPOSE_FAILED,
+    ASP_AUDIO_QUEUE_STOP_FAILED,
+    ASP_AUDIO_QUEUE_FLUSH_FAILED,
+    ASP_AUDIO_STREAMER_FAILED,
+    ASP_GET_AUDIO_TIME_FAILED,
+    ASP_AUDIO_BUFFER_TOO_SMALL
+} AudioStreamPlayerErrorCode;
+
+#pragma mark -
 
 @interface GG977AudioStreamPlayer ()
 
+/*
+ Чтобы Си функции видели эти методы
+ */
 - (void)handlePropertyChangeForFileStream:(AudioFileStreamID)inAudioFileStream
                      fileStreamPropertyID:(AudioFileStreamPropertyID)inPropertyID
                                   ioFlags:(UInt32 *)ioFlags;
@@ -117,8 +122,8 @@ typedef enum
                           propertyID:(AudioQueuePropertyID)inID;
 - (void)handleReadFromStream:(CFReadStreamRef)aStream eventType:(CFStreamEventType)eventType;
 
-@property (nonatomic, strong) GG977StationInfo *station;
-@property (nonatomic, strong) GG977MetadataParser *metadataParser;
+@property (nonatomic, strong) GG977StationInfo *station;            // Данные станции с который стримим
+@property (nonatomic, strong) GG977MetadataParser *metadataParser;  // Парсер метаданных
 
 @end
 
@@ -133,7 +138,7 @@ typedef enum
  This function is adapted from Apple's example in AudioFileStreamExample with
  kAudioQueueProperty_IsRunning listening added.
  */
-static void ASPropertyListenerProc(void *						inClientData,
+static void ASPPropertyListenerProc(void *						inClientData,
                                    AudioFileStreamID				inAudioFileStream,
                                    AudioFileStreamPropertyID		inPropertyID,
                                    UInt32 *						ioFlags)
@@ -153,7 +158,7 @@ static void ASPropertyListenerProc(void *						inClientData,
  This function is adapted from Apple's example in AudioFileStreamExample with
  CBR functionality added.
  */
-static void ASPacketsProc(void *						inClientData,
+static void ASPPacketsProc(void *						inClientData,
                           UInt32						inNumberBytes,
                           UInt32						inNumberPackets,
                           const void *					inInputData,
@@ -172,7 +177,7 @@ static void ASPacketsProc(void *						inClientData,
 
  This function is unchanged from Apple's example in AudioFileStreamExample.
  */
-static void ASAudioQueueOutputCallback(void*				inClientData,
+static void ASPAudioQueueOutputCallback(void*				inClientData,
                                        AudioQueueRef			inAQ,
                                        AudioQueueBufferRef		inBuffer)
 {
@@ -188,7 +193,7 @@ static void ASAudioQueueOutputCallback(void*				inClientData,
  information is used to toggle the observable "isPlaying" property and
  set the "finished" flag.
  */
-static void ASAudioQueueIsRunningCallback(void *inUserData, AudioQueueRef inAQ, AudioQueuePropertyID inID)
+static void ASPAudioQueueIsRunningCallback(void *inUserData, AudioQueueRef inAQ, AudioQueuePropertyID inID)
 {
     //    NSLog(@"ASAudioQueueIsRunningCallback");
     GG977AudioStreamPlayer* streamer = (__bridge GG977AudioStreamPlayer *)inUserData;
@@ -198,9 +203,56 @@ static void ASAudioQueueIsRunningCallback(void *inUserData, AudioQueueRef inAQ, 
 /**
  Invoked if the audio session is interrupted (like when the phone rings)
  */
-static void ASAudioSessionInterruptionListener(__unused void * inClientData, UInt32 inInterruptionState) {
+static void ASPAudioSessionInterruptionListener(__unused void * inClientData, UInt32 inInterruptionState) {
 //    NSLog(@"ASAudioSessionInterruptionListener");
     [[NSNotificationCenter defaultCenter] postNotificationName:ASAudioSessionInterruptionOccuredNotification object:@(inInterruptionState)];
+}
+
+void ASPAudioRouteChangeListenerCallback (
+                                          void                      *inUserData,
+                                          AudioSessionPropertyID    inPropertyID,
+                                          UInt32                    inPropertyValueSize,
+                                          const void                *inPropertyValue)
+{
+    // Code here
+    if (inPropertyID != kAudioSessionProperty_AudioRouteChange) return;
+    
+    GG977AudioStreamPlayer* streamer = (__bridge GG977AudioStreamPlayer *)inUserData;
+    
+    CFDictionaryRef routeChangeDictionary = inPropertyValue;
+    
+    CFNumberRef routeChangeReasonRef =
+    CFDictionaryGetValue (routeChangeDictionary,
+                          CFSTR (kAudioSession_AudioRouteChangeKey_Reason));
+    
+    SInt32 routeChangeReason;
+    
+    CFNumberGetValue (routeChangeReasonRef,
+                      kCFNumberSInt32Type,
+                      &routeChangeReason);
+    
+    CFStringRef oldRouteRef =
+    CFDictionaryGetValue (routeChangeDictionary,
+                          CFSTR (kAudioSession_AudioRouteChangeKey_OldRoute));
+    
+    NSString *oldRouteString = (__bridge NSString *)oldRouteRef;
+    
+    //    if (routeChangeReason == kAudioSessionRouteChangeReason_NewDeviceAvailable)
+    //    {
+    //        if ([oldRouteString isEqualToString:@"Speaker"])
+    //        {
+    ////            [controller.audioPlayer play];
+    //        }
+    //    }
+    
+    if (routeChangeReason == kAudioSessionRouteChangeReason_OldDeviceUnavailable)
+    {
+        if ((([oldRouteString isEqualToString:@"Headphone"]) ||
+             ([oldRouteString isEqualToString:@"LineOut"])))
+        {
+            [streamer stop];
+        }
+    }
 }
 
 #pragma mark - CFReadStream Callback Function Implementations
@@ -220,62 +272,11 @@ static void ASReadStreamCallBack (CFReadStreamRef aStream, CFStreamEventType eve
     [streamer handleReadFromStream:aStream eventType:eventType];
 }
 
-#pragma mark - AudioRouteChange
-
-void audioRouteChangeListenerCallback (
-                                       void                      *inUserData,
-                                       AudioSessionPropertyID    inPropertyID,
-                                       UInt32                    inPropertyValueSize,
-                                       const void                *inPropertyValue) 
-{
-    // Code here
-    if (inPropertyID != kAudioSessionProperty_AudioRouteChange) return;
-    
-    GG977AudioStreamPlayer* streamer = (__bridge GG977AudioStreamPlayer *)inUserData;
-    
-    CFDictionaryRef routeChangeDictionary = inPropertyValue;
-    
-    CFNumberRef routeChangeReasonRef =
-    CFDictionaryGetValue (
-                          routeChangeDictionary,
-                          CFSTR (kAudioSession_AudioRouteChangeKey_Reason));
-    
-    SInt32 routeChangeReason;
-    
-    CFNumberGetValue (
-                      routeChangeReasonRef,
-                      kCFNumberSInt32Type,
-                      &routeChangeReason);
-    
-    CFStringRef oldRouteRef =
-    CFDictionaryGetValue (
-                          routeChangeDictionary,
-                          CFSTR (kAudioSession_AudioRouteChangeKey_OldRoute));
-    
-    NSString *oldRouteString = (__bridge NSString *)oldRouteRef;
-    
-    if (routeChangeReason == kAudioSessionRouteChangeReason_NewDeviceAvailable)
-    {
-        if ([oldRouteString isEqualToString:@"Speaker"])
-        {
-//            [controller.audioPlayer play];
-        }
-    }
-    
-    if (routeChangeReason ==
-        kAudioSessionRouteChangeReason_OldDeviceUnavailable)
-    {
-        if ((([oldRouteString isEqualToString:@"Headphone"]) ||
-             ([oldRouteString isEqualToString:@"LineOut"])))
-        {
-            [streamer stop];
-        }
-    }
-}
+#pragma mark -
 
 @implementation GG977AudioStreamPlayer {
-#warning delete
-    NSURL *_url;     // URL стрима
+//#warning delete
+//    NSURL *_url;     // URL стрима
     
     //
     // Special threading consideration:
@@ -288,14 +289,14 @@ void audioRouteChangeListenerCallback (
     NSThread *                      _internalThread;	// the thread where the download and audio file
                                                         // stream parsing occurs
     
-    AudioStreamerState              _state;
-    AudioStreamerState              _laststate;
-    AudioStreamerStopReason         _stopReason;
-    AudioStreamerErrorCode          _errorCode;
+    AudioStreamPlayerState          _state;
+    AudioStreamPlayerState          _laststate;
+    AudioStreamPlayerStopReason     _stopReason;
+    AudioStreamPlayerErrorCode      _errorCode;
     OSStatus                        _err;
     
     CFReadStreamRef                 _stream;            // Стрим для чтения потока
-    NSNotificationCenter *          _notificationCenter;
+//    NSNotificationCenter *          _notificationCenter;
     
     AudioQueueBufferRef             _audioQueueBuffer[NUM_AQ_BUFS];		// audio queue buffers
     AudioStreamPacketDescription    _packetDescs[AQ_MAX_PACKET_DESCS];	// packet descriptions
@@ -308,19 +309,19 @@ void audioRouteChangeListenerCallback (
     bool                            _inuse[NUM_AQ_BUFS];	// flags to indicate that a buffer is still in use
     NSInteger                       _buffersUsed;
     NSDictionary *                  _httpHeaders;
-#warning не нужен?
-    bool                            _discontinuous;             // flag to indicate middle of the stream
+//#warning не нужен?
+//    bool                            _discontinuous;             // flag to indicate middle of the stream
     
     pthread_mutex_t                 _queueBuffersMutex;			// a mutex to protect the inuse flags
     pthread_cond_t                  _queueBufferReadyCondition;	// a condition varable for
                                                                 // handling the inuse flags
     
-    UInt32                          _bitRate;                   // Bits per second in the file
-    NSInteger                       _dataOffset;        // Offset of the first audio packet in the stream
-#warning не нужен?
-    NSInteger                       _fileLength;		// Length of the file in bytes
-    NSInteger                       _seekByteOffset;	// Seek offset within the file in bytes
-    UInt64                          _audioDataByteCount;// Used when the actual number of audio bytes in
+//    UInt32                          _bitRate;                   // Bits per second in the file
+//    NSInteger                       _dataOffset;        // Offset of the first audio packet in the stream
+//#warning не нужен?
+//    NSInteger                       _fileLength;		// Length of the file in bytes
+//    NSInteger                       _seekByteOffset;	// Seek offset within the file in bytes
+//    UInt64                          _audioDataByteCount;// Used when the actual number of audio bytes in
                                                         // the file is known (more accurate than assuming
                                                         // the whole file is audio)
     
@@ -352,8 +353,8 @@ void audioRouteChangeListenerCallback (
         _metadataParser = [[GG977MetadataParser alloc] initWithInterval:5];
         _metadataParser.stationID = _station.externalID;
         _metadataParser.delegate = self;
-#warning delete _url
-        _url = _station.url;
+//#warning delete _url
+//        _url = _station.url;
         
         [[NSNotificationCenter defaultCenter] addObserver:self selector:@selector(handleInterruptionChangeToState:) name:ASAudioSessionInterruptionOccuredNotification object:nil];
     }
@@ -389,49 +390,49 @@ void audioRouteChangeListenerCallback (
     
     NSString *strState;
     switch (_state) {
-        case AS_INITIALIZED:
+        case ASP_INITIALIZED:
             strState = @"AS_INITIALIZED";
             if ([self.delegate respondsToSelector:@selector(playerDidPrepareForPlayback:)]) {
                 [self.delegate playerDidPrepareForPlayback:self];
             }
             break;
-        case AS_STARTING_FILE_THREAD:
+        case ASP_STARTING_FILE_THREAD:
             strState = @"AS_STARTING_FILE_THREAD";
             if ([self.delegate respondsToSelector:@selector(playerDidBeginConnection:)]) {
                 [self.delegate playerDidBeginConnection:self];
             }
             break;
-        case AS_WAITING_FOR_DATA:
+        case ASP_WAITING_FOR_DATA:
             strState = @"AS_WAITING_FOR_DATA";
             break;
-        case AS_FLUSHING_EOF:
+        case ASP_FLUSHING_EOF:
             strState = @"AS_FLUSHING_EOF";
             break;
-        case AS_WAITING_FOR_QUEUE_TO_START:
+        case ASP_WAITING_FOR_QUEUE_TO_START:
             strState = @"AS_WAITING_FOR_QUEUE_TO_START";
             break;
-        case AS_PLAYING:
+        case ASP_PLAYING:
             strState = @"AS_PLAYING";
             if ([self.delegate respondsToSelector:@selector(playerDidStartPlaying:)]) {
                 [self.delegate playerDidStartPlaying:self];
             }
             break;
-        case AS_BUFFERING:
+        case ASP_BUFFERING:
             strState = @"AS_BUFFERING";
             break;
-        case AS_STOPPING:
+        case ASP_STOPPING:
             strState = @"AS_STOPPING";
             if ([self.delegate respondsToSelector:@selector(playerDidStopPlaying:)]) {
                 [self.delegate playerDidStopPlaying:self];
             }
             break;
-        case AS_STOPPED:
+        case ASP_STOPPED:
             strState = @"AS_STOPPED";
             if ([self.delegate respondsToSelector:@selector(playerDidStopPlaying:)]) {
                 [self.delegate playerDidStopPlaying:self];
             }
             break;
-        case AS_PAUSED:
+        case ASP_PAUSED:
             strState = @"AS_PAUSED";
             if ([self.delegate respondsToSelector:@selector(playerDidPausePlaying:)]) {
                 [self.delegate playerDidPausePlaying:self];
@@ -445,7 +446,7 @@ void audioRouteChangeListenerCallback (
     NSLog(@"state = %@", strState);
 }
 
-- (AudioStreamerState)state
+- (AudioStreamPlayerState)state
 {
     //    NSLog(@"state");
     @synchronized(self)
@@ -457,7 +458,7 @@ void audioRouteChangeListenerCallback (
 /**
  Sets the state and sends a notification that the state has changed.
  */
-- (void)setState:(AudioStreamerState)status
+- (void)setState:(AudioStreamPlayerState)status
 {
     //    NSLog(@"setState");
     @synchronized(self)
@@ -492,17 +493,17 @@ void audioRouteChangeListenerCallback (
     @synchronized (self)
     {
         // Если проигрывание было остановлено, то возобнавляем проигрывание
-        if (_state == AS_PAUSED)
+        if (_state == ASP_PAUSED)
         {
             [self resume];
         }
         // Если первый запуск, то запускаем работу внутреннего потока
-        else if (_state == AS_INITIALIZED)
+        else if (_state == ASP_INITIALIZED)
         {
             NSAssert([[NSThread currentThread] isEqual:[NSThread mainThread]],
                      @"Playback can only be started from the main thread.");
-            _notificationCenter = [NSNotificationCenter defaultCenter];
-            self.state = AS_STARTING_FILE_THREAD;
+//            _notificationCenter = [NSNotificationCenter defaultCenter];
+            self.state = ASP_STARTING_FILE_THREAD;
             _internalThread =
             [[NSThread alloc]
              initWithTarget:self
@@ -530,27 +531,27 @@ void audioRouteChangeListenerCallback (
     @synchronized(self)
     {
         if (_audioQueue &&
-            (_state == AS_PLAYING || _state == AS_PAUSED ||
-             _state == AS_BUFFERING || _state == AS_WAITING_FOR_QUEUE_TO_START))
+            (_state == ASP_PLAYING || _state == ASP_PAUSED ||
+             _state == ASP_BUFFERING || _state == ASP_WAITING_FOR_QUEUE_TO_START))
         {
-            self.state = AS_STOPPING;
-            _stopReason = AS_STOPPING_USER_ACTION;
+            self.state = ASP_STOPPING;
+            _stopReason = ASP_STOPPING_USER_ACTION;
             _err = AudioQueueStop(_audioQueue, true);
             if (_err)
             {
-                [self failWithErrorCode:AS_AUDIO_QUEUE_STOP_FAILED];
+                [self failWithErrorCode:ASP_AUDIO_QUEUE_STOP_FAILED];
                 return;
             }
         }
-        else if (_state != AS_INITIALIZED)
+        else if (_state != ASP_INITIALIZED)
         {
-            self.state = AS_STOPPED;
-            _stopReason = AS_STOPPING_USER_ACTION;
+            self.state = ASP_STOPPED;
+            _stopReason = ASP_STOPPING_USER_ACTION;
         }
 //        seekWasRequested = NO;
     }
     
-    while (_state != AS_INITIALIZED)
+    while (_state != ASP_INITIALIZED)
     {
         [NSThread sleepForTimeInterval:0.1];
     }
@@ -563,16 +564,16 @@ void audioRouteChangeListenerCallback (
     NSLog(@"pause");
     @synchronized(self)
     {
-        if (_state == AS_PLAYING || _state == AS_STOPPING)
+        if (_state == ASP_PLAYING || _state == ASP_STOPPING)
         {
             _err = AudioQueuePause(_audioQueue);
             if (_err)
             {
-                [self failWithErrorCode:AS_AUDIO_QUEUE_PAUSE_FAILED];
+                [self failWithErrorCode:ASP_AUDIO_QUEUE_PAUSE_FAILED];
                 return;
             }
             _laststate = _state;
-            self.state = AS_PAUSED;
+            self.state = ASP_PAUSED;
         }
         /*
         else if (_state == AS_PAUSED)
@@ -606,12 +607,12 @@ void audioRouteChangeListenerCallback (
             self.state = AS_PAUSED;
         }
         else */
-        if (_state == AS_PAUSED)
+        if (_state == ASP_PAUSED)
         {
             _err = AudioQueueStart(_audioQueue, NULL);
             if (_err)
             {
-                [self failWithErrorCode:AS_AUDIO_QUEUE_START_FAILED];
+                [self failWithErrorCode:ASP_AUDIO_QUEUE_START_FAILED];
                 return;
             }
             self.state = _laststate;
@@ -625,7 +626,7 @@ void audioRouteChangeListenerCallback (
  */
 - (BOOL)isPlaying {
 //    NSLog(@"isPlaying");
-    if (_state == AS_PLAYING)
+    if (_state == ASP_PLAYING)
     {
         return YES;
     }
@@ -638,7 +639,7 @@ void audioRouteChangeListenerCallback (
  */
 - (BOOL)isPaused {
 //    NSLog(@"isPaused");
-    if (_state == AS_PAUSED)
+    if (_state == ASP_PAUSED)
     {
         return YES;
     }
@@ -654,10 +655,10 @@ void audioRouteChangeListenerCallback (
     @synchronized(self)
     {
         if ([self isFinishing]                      ||
-            _state == AS_STARTING_FILE_THREAD       ||
-            _state == AS_WAITING_FOR_DATA           ||
-            _state == AS_WAITING_FOR_QUEUE_TO_START ||
-            _state == AS_BUFFERING)
+            _state == ASP_STARTING_FILE_THREAD       ||
+            _state == ASP_WAITING_FOR_DATA           ||
+            _state == ASP_WAITING_FOR_QUEUE_TO_START ||
+            _state == ASP_BUFFERING)
         {
             return YES;
         }
@@ -674,9 +675,9 @@ void audioRouteChangeListenerCallback (
 //    NSLog(@"isFinishing");
     @synchronized (self)
     {
-        if ((_errorCode != AS_NO_ERROR && _state != AS_INITIALIZED) ||
-            ((_state == AS_STOPPING || _state == AS_STOPPED) &&
-             _stopReason != AS_STOPPING_TEMPORARILY))
+        if ((_errorCode != ASP_NO_ERROR && _state != ASP_INITIALIZED) ||
+            ((_state == ASP_STOPPING || _state == ASP_STOPPED) &&
+             _stopReason != ASP_STOPPING_TEMPORARILY))
         {
             return YES;
         }
@@ -690,7 +691,7 @@ void audioRouteChangeListenerCallback (
  */
 - (BOOL)isIdle {
 //    NSLog(@"isIdle");
-    if (_state == AS_INITIALIZED)
+    if (_state == ASP_INITIALIZED)
     {
         return YES;
     }
@@ -703,7 +704,7 @@ void audioRouteChangeListenerCallback (
  */
 - (BOOL)isAborted {
 //    NSLog(@"isAborted");
-    if (_state == AS_STOPPING && _stopReason == AS_STOPPING_ERROR)
+    if (_state == ASP_STOPPING && _stopReason == ASP_STOPPING_ERROR)
     {
         return YES;
     }
@@ -742,14 +743,14 @@ void audioRouteChangeListenerCallback (
     
     @synchronized(self)
     {
-        if (_state != AS_STARTING_FILE_THREAD)
+        if (_state != ASP_STARTING_FILE_THREAD)
         {
-            if (_state != AS_STOPPING &&
-                _state != AS_STOPPED)
+            if (_state != ASP_STOPPING &&
+                _state != ASP_STOPPED)
             {
                 NSLog(@"### Not starting audio thread. State code is: %ld", (long)_state);
             }
-            self.state = AS_INITIALIZED;
+            self.state = ASP_INITIALIZED;
             return;
         }
         
@@ -759,7 +760,7 @@ void audioRouteChangeListenerCallback (
         AudioSessionInitialize (
                                 NULL,                          // 'NULL' to use the default (main) run loop
                                 NULL,                          // 'NULL' to use the default run loop mode
-                                ASAudioSessionInterruptionListener,  // a reference to your interruption callback
+                                ASPAudioSessionInterruptionListener,  // a reference to your interruption callback
                                 (__bridge void *)(self)                       // data to pass to your interruption listener callback
                                 );
         UInt32 sessionCategory = kAudioSessionCategory_MediaPlayback;
@@ -771,7 +772,7 @@ void audioRouteChangeListenerCallback (
         
         AudioSessionAddPropertyListener (
                                          kAudioSessionProperty_AudioRouteChange,
-                                         audioRouteChangeListenerCallback,
+                                         ASPAudioRouteChangeListenerCallback,
                                          (__bridge void *)(self));
         
         AudioSessionSetActive(true);
@@ -810,15 +811,15 @@ void audioRouteChangeListenerCallback (
         // handleBufferCompleteForQueue:buffer: should not change the state
         // (may not enter the synchronized section).
         //
-        if (_buffersUsed == 0 && self.state == AS_PLAYING)
+        if (_buffersUsed == 0 && self.state == ASP_PLAYING)
         {
             _err = AudioQueuePause(_audioQueue);
             if (_err)
             {
-                [self failWithErrorCode:AS_AUDIO_QUEUE_PAUSE_FAILED];
+                [self failWithErrorCode:ASP_AUDIO_QUEUE_PAUSE_FAILED];
                 return;
             }
-            self.state = AS_BUFFERING;
+            self.state = ASP_BUFFERING;
         }
     } while (isRunning && ![self runLoopShouldExit]);
     
@@ -848,7 +849,7 @@ void audioRouteChangeListenerCallback (
             _audioFileStream = nil;
             if (_err)
             {
-                [self failWithErrorCode:AS_FILE_STREAM_CLOSE_FAILED];
+                [self failWithErrorCode:ASP_FILE_STREAM_CLOSE_FAILED];
             }
         }
         
@@ -861,7 +862,7 @@ void audioRouteChangeListenerCallback (
             _audioQueue = nil;
             if (_err)
             {
-                [self failWithErrorCode:AS_AUDIO_QUEUE_DISPOSE_FAILED];
+                [self failWithErrorCode:ASP_AUDIO_QUEUE_DISPOSE_FAILED];
             }
         }
         
@@ -874,9 +875,9 @@ void audioRouteChangeListenerCallback (
         
         _bytesFilled = 0;
         _packetsFilled = 0;
-        _seekByteOffset = 0;
+//        _seekByteOffset = 0;
         _packetBufferSize = 0;
-        self.state = AS_INITIALIZED;
+        self.state = ASP_INITIALIZED;
         
         _internalThread = nil;
     }
@@ -897,7 +898,7 @@ void audioRouteChangeListenerCallback (
         //
         // Создаем HTTP GET запрос
         //
-        CFHTTPMessageRef message= CFHTTPMessageCreateRequest(NULL, (CFStringRef)@"GET", (__bridge CFURLRef)_url, kCFHTTPVersion1_1);
+        CFHTTPMessageRef message= CFHTTPMessageCreateRequest(NULL, (CFStringRef)@"GET", (__bridge CFURLRef)self.station.url, kCFHTTPVersion1_1);
         
         //
         // If we are creating this request to seek to a location, set the
@@ -925,7 +926,7 @@ void audioRouteChangeListenerCallback (
                                     kCFStreamPropertyHTTPShouldAutoredirect,
                                     kCFBooleanTrue) == false)
         {
-            [self failWithErrorCode:AS_FILE_STREAM_SET_PROPERTY_FAILED];
+            [self failWithErrorCode:ASP_FILE_STREAM_SET_PROPERTY_FAILED];
             
             return NO;
         }
@@ -940,7 +941,7 @@ void audioRouteChangeListenerCallback (
         //
         // We're now ready to receive data
         //
-        self.state = AS_WAITING_FOR_DATA;
+        self.state = ASP_WAITING_FOR_DATA;
         
         //
         // Открываем stream
@@ -949,7 +950,7 @@ void audioRouteChangeListenerCallback (
         {
             CFRelease(_stream);
             
-            [self failWithErrorCode:AS_FILE_STREAM_OPEN_FAILED];
+            [self failWithErrorCode:ASP_FILE_STREAM_OPEN_FAILED];
             
             return NO;
         }
@@ -977,9 +978,9 @@ void audioRouteChangeListenerCallback (
 //    NSLog(@"runLoopShouldExit");
     @synchronized(self)
     {
-        if (_errorCode != AS_NO_ERROR ||
-            (_state == AS_STOPPED &&
-             _stopReason != AS_STOPPING_TEMPORARILY))
+        if (_errorCode != ASP_NO_ERROR ||
+            (_state == ASP_STOPPED &&
+             _stopReason != ASP_STOPPING_TEMPORARILY))
         {
             return YES;
         }
@@ -1030,53 +1031,53 @@ void audioRouteChangeListenerCallback (
 /**
  Converts an error code to a string that can be localized or presented to the user.
  */
-+ (NSString *)stringForErrorCode:(AudioStreamerErrorCode)anErrorCode
++ (NSString *)stringForErrorCode:(AudioStreamPlayerErrorCode)anErrorCode
 {
     switch (anErrorCode)
     {
-        case AS_NO_ERROR:
+        case ASP_NO_ERROR:
             return AS_NO_ERROR_STRING;
-        case AS_FILE_STREAM_GET_PROPERTY_FAILED:
+        case ASP_FILE_STREAM_GET_PROPERTY_FAILED:
             return AS_FILE_STREAM_GET_PROPERTY_FAILED_STRING;
-        case AS_FILE_STREAM_SEEK_FAILED:
+        case ASP_FILE_STREAM_SEEK_FAILED:
             return AS_FILE_STREAM_SEEK_FAILED_STRING;
-        case AS_FILE_STREAM_PARSE_BYTES_FAILED:
+        case ASP_FILE_STREAM_PARSE_BYTES_FAILED:
             return AS_FILE_STREAM_PARSE_BYTES_FAILED_STRING;
-        case AS_AUDIO_QUEUE_CREATION_FAILED:
+        case ASP_AUDIO_QUEUE_CREATION_FAILED:
             return AS_AUDIO_QUEUE_CREATION_FAILED_STRING;
-        case AS_AUDIO_QUEUE_BUFFER_ALLOCATION_FAILED:
+        case ASP_AUDIO_QUEUE_BUFFER_ALLOCATION_FAILED:
             return AS_AUDIO_QUEUE_BUFFER_ALLOCATION_FAILED_STRING;
-        case AS_AUDIO_QUEUE_ENQUEUE_FAILED:
+        case ASP_AUDIO_QUEUE_ENQUEUE_FAILED:
             return AS_AUDIO_QUEUE_ENQUEUE_FAILED_STRING;
-        case AS_AUDIO_QUEUE_ADD_LISTENER_FAILED:
+        case ASP_AUDIO_QUEUE_ADD_LISTENER_FAILED:
             return AS_AUDIO_QUEUE_ADD_LISTENER_FAILED_STRING;
-        case AS_AUDIO_QUEUE_REMOVE_LISTENER_FAILED:
+        case ASP_AUDIO_QUEUE_REMOVE_LISTENER_FAILED:
             return AS_AUDIO_QUEUE_REMOVE_LISTENER_FAILED_STRING;
-        case AS_AUDIO_QUEUE_START_FAILED:
+        case ASP_AUDIO_QUEUE_START_FAILED:
             return AS_AUDIO_QUEUE_START_FAILED_STRING;
-        case AS_AUDIO_QUEUE_BUFFER_MISMATCH:
+        case ASP_AUDIO_QUEUE_BUFFER_MISMATCH:
             return AS_AUDIO_QUEUE_BUFFER_MISMATCH_STRING;
-        case AS_FILE_STREAM_OPEN_FAILED:
+        case ASP_FILE_STREAM_OPEN_FAILED:
             return AS_FILE_STREAM_OPEN_FAILED_STRING;
-        case AS_FILE_STREAM_CLOSE_FAILED:
+        case ASP_FILE_STREAM_CLOSE_FAILED:
             return AS_FILE_STREAM_CLOSE_FAILED_STRING;
-        case AS_AUDIO_QUEUE_DISPOSE_FAILED:
+        case ASP_AUDIO_QUEUE_DISPOSE_FAILED:
             return AS_AUDIO_QUEUE_DISPOSE_FAILED_STRING;
-        case AS_AUDIO_QUEUE_PAUSE_FAILED:
+        case ASP_AUDIO_QUEUE_PAUSE_FAILED:
             return AS_AUDIO_QUEUE_DISPOSE_FAILED_STRING;
-        case AS_AUDIO_QUEUE_FLUSH_FAILED:
+        case ASP_AUDIO_QUEUE_FLUSH_FAILED:
             return AS_AUDIO_QUEUE_FLUSH_FAILED_STRING;
-        case AS_AUDIO_DATA_NOT_FOUND:
+        case ASP_AUDIO_DATA_NOT_FOUND:
             return AS_AUDIO_DATA_NOT_FOUND_STRING;
-        case AS_GET_AUDIO_TIME_FAILED:
+        case ASP_GET_AUDIO_TIME_FAILED:
             return AS_GET_AUDIO_TIME_FAILED_STRING;
-        case AS_NETWORK_CONNECTION_FAILED:
+        case ASP_NETWORK_CONNECTION_FAILED:
             return AS_NETWORK_CONNECTION_FAILED_STRING;
-        case AS_AUDIO_QUEUE_STOP_FAILED:
+        case ASP_AUDIO_QUEUE_STOP_FAILED:
             return AS_AUDIO_QUEUE_STOP_FAILED_STRING;
-        case AS_AUDIO_STREAMER_FAILED:
+        case ASP_AUDIO_STREAMER_FAILED:
             return AS_AUDIO_STREAMER_FAILED_STRING;
-        case AS_AUDIO_BUFFER_TOO_SMALL:
+        case ASP_AUDIO_BUFFER_TOO_SMALL:
             return [NSString stringWithFormat:AS_AUDIO_BUFFER_TOO_SMALL_STRING, AQ_DEFAULT_BUF_SIZE];
         default:
             return AS_AUDIO_STREAMER_FAILED_STRING;
@@ -1088,12 +1089,12 @@ void audioRouteChangeListenerCallback (
 /**
  Sets the playback state to failed and logs the error.
  */
-- (void)failWithErrorCode:(AudioStreamerErrorCode)anErrorCode
+- (void)failWithErrorCode:(AudioStreamPlayerErrorCode)anErrorCode
 {
 //    NSLog(@"failWithErrorCode");
     @synchronized(self)
     {
-        if (_errorCode != AS_NO_ERROR)
+        if (_errorCode != ASP_NO_ERROR)
         {
             // Only set the error once.
             return;
@@ -1114,12 +1115,12 @@ void audioRouteChangeListenerCallback (
             NSLog(@"%@", [GG977AudioStreamPlayer stringForErrorCode:anErrorCode]);
         }
         
-        if (_state == AS_PLAYING    ||
-            _state == AS_PAUSED     ||
-            _state == AS_BUFFERING)
+        if (_state == ASP_PLAYING    ||
+            _state == ASP_PAUSED     ||
+            _state == ASP_BUFFERING)
         {
-            self.state = AS_STOPPING;
-            _stopReason = AS_STOPPING_ERROR;
+            self.state = ASP_STOPPING;
+            _stopReason = ASP_STOPPING_ERROR;
             AudioQueueStop(_audioQueue, true);
         }
         
@@ -1157,7 +1158,7 @@ void audioRouteChangeListenerCallback (
     
     if (eventType == kCFStreamEventErrorOccurred)
     {
-        [self failWithErrorCode:AS_AUDIO_DATA_NOT_FOUND];
+        [self failWithErrorCode:ASP_AUDIO_DATA_NOT_FOUND];
     }
     /*
 #warning нужен ли?
@@ -1254,11 +1255,11 @@ void audioRouteChangeListenerCallback (
         if (!_audioFileStream)
         {
             // create an audio file stream parser
-            _err = AudioFileStreamOpen((__bridge void *)(self), ASPropertyListenerProc, ASPacketsProc,
+            _err = AudioFileStreamOpen((__bridge void *)(self), ASPPropertyListenerProc, ASPPacketsProc,
                                       kAudioFileAAC_ADTSType, &_audioFileStream);
             if (_err)
             {
-                [self failWithErrorCode:AS_FILE_STREAM_OPEN_FAILED];
+                [self failWithErrorCode:ASP_FILE_STREAM_OPEN_FAILED];
                 return;
             }
         }
@@ -1279,7 +1280,7 @@ void audioRouteChangeListenerCallback (
             
             if (length == -1)
             {
-                [self failWithErrorCode:AS_AUDIO_DATA_NOT_FOUND];
+                [self failWithErrorCode:ASP_AUDIO_DATA_NOT_FOUND];
                 return;
             }
             
@@ -1304,7 +1305,7 @@ void audioRouteChangeListenerCallback (
             _err = AudioFileStreamParseBytes(_audioFileStream, length, bytes, 0);
             if (_err)
             {
-                [self failWithErrorCode:AS_FILE_STREAM_PARSE_BYTES_FAILED];
+                [self failWithErrorCode:ASP_FILE_STREAM_PARSE_BYTES_FAILED];
                 return;
             }
         }
@@ -1334,9 +1335,9 @@ void audioRouteChangeListenerCallback (
         if (inPropertyID == kAudioFileStreamProperty_ReadyToProducePackets)
         {
 //            NSLog(@"kAudioFileStreamProperty_ReadyToProducePackets");
-            _discontinuous = true;
+//            _discontinuous = true;
         }
-        else if (inPropertyID == kAudioFileStreamProperty_DataOffset)
+        /*else if (inPropertyID == kAudioFileStreamProperty_DataOffset)
         {
 //            NSLog(@"kAudioFileStreamProperty_DataOffset");
             SInt64 offset;
@@ -1344,7 +1345,7 @@ void audioRouteChangeListenerCallback (
             _err = AudioFileStreamGetProperty(inAudioFileStream, kAudioFileStreamProperty_DataOffset, &offsetSize, &offset);
             if (_err)
             {
-                [self failWithErrorCode:AS_FILE_STREAM_GET_PROPERTY_FAILED];
+                [self failWithErrorCode:ASP_FILE_STREAM_GET_PROPERTY_FAILED];
                 return;
             }
             _dataOffset = offset;
@@ -1362,7 +1363,7 @@ void audioRouteChangeListenerCallback (
             _err = AudioFileStreamGetProperty(inAudioFileStream, kAudioFileStreamProperty_AudioDataByteCount, &byteCountSize, &_audioDataByteCount);
             if (_err)
             {
-                [self failWithErrorCode:AS_FILE_STREAM_GET_PROPERTY_FAILED];
+                [self failWithErrorCode:ASP_FILE_STREAM_GET_PROPERTY_FAILED];
                 return;
             }
             _fileLength = _dataOffset + _audioDataByteCount;
@@ -1390,11 +1391,11 @@ void audioRouteChangeListenerCallback (
                 _err = AudioFileStreamGetProperty(inAudioFileStream, kAudioFileStreamProperty_DataFormat, &asbdSize, &_asbd);
                 if (_err)
                 {
-                    [self failWithErrorCode:AS_FILE_STREAM_GET_PROPERTY_FAILED];
+                    [self failWithErrorCode:ASP_FILE_STREAM_GET_PROPERTY_FAILED];
                     return;
                 }
             }
-        }
+        } */
         else if (inPropertyID == kAudioFileStreamProperty_FormatList)
         {
 //            NSLog(@"kAudioFileStreamProperty_FormatList");
@@ -1403,7 +1404,7 @@ void audioRouteChangeListenerCallback (
             _err = AudioFileStreamGetPropertyInfo(inAudioFileStream, kAudioFileStreamProperty_FormatList, &formatListSize, &outWriteable);
             if (_err)
             {
-                [self failWithErrorCode:AS_FILE_STREAM_GET_PROPERTY_FAILED];
+                [self failWithErrorCode:ASP_FILE_STREAM_GET_PROPERTY_FAILED];
                 return;
             }
             
@@ -1412,7 +1413,7 @@ void audioRouteChangeListenerCallback (
             if (_err)
             {
                 free(formatList);
-                [self failWithErrorCode:AS_FILE_STREAM_GET_PROPERTY_FAILED];
+                [self failWithErrorCode:ASP_FILE_STREAM_GET_PROPERTY_FAILED];
                 return;
             }
             
@@ -1465,6 +1466,7 @@ void audioRouteChangeListenerCallback (
             return;
         }
         
+        /*
         if (_bitRate == 0)
         {
 //            NSLog(@"_bitRate == 0");
@@ -1476,15 +1478,16 @@ void audioRouteChangeListenerCallback (
             //
             _bitRate = ~0;
         }
-        
+        */
         // we have successfully read the first packests from the audio stream, so
         // clear the "discontinuous" flag
+        /*
         if (_discontinuous)
         {
 //            NSLog(@"_discontinuous");
             _discontinuous = false;
         }
-        
+        */
         if (!_audioQueue)
         {
 //            NSLog(@"!_audioQueue");
@@ -1499,7 +1502,7 @@ void audioRouteChangeListenerCallback (
         for (int i = 0; i < inNumberPackets; ++i)
         {
             SInt64 packetOffset = inPacketDescriptions[i].mStartOffset;
-            SInt64 packetSize   = inPacketDescriptions[i].mDataByteSize;
+            UInt32 packetSize   = inPacketDescriptions[i].mDataByteSize;
             size_t bufSpaceRemaining;
             
             if (_processedPacketsCount < BIT_RATE_ESTIMATION_MAX_PACKETS)
@@ -1519,7 +1522,7 @@ void audioRouteChangeListenerCallback (
                 
                 if (packetSize > _packetBufferSize)
                 {
-                    [self failWithErrorCode:AS_AUDIO_BUFFER_TOO_SMALL];
+                    [self failWithErrorCode:ASP_AUDIO_BUFFER_TOO_SMALL];
                 }
                 
                 bufSpaceRemaining = _packetBufferSize - _bytesFilled;
@@ -1648,7 +1651,7 @@ void audioRouteChangeListenerCallback (
     
     if (bufIndex == -1)
     {
-        [self failWithErrorCode:AS_AUDIO_QUEUE_BUFFER_MISMATCH];
+        [self failWithErrorCode:ASP_AUDIO_QUEUE_BUFFER_MISMATCH];
         pthread_mutex_lock(&_queueBuffersMutex);
         pthread_cond_signal(&_queueBufferReadyCondition);
         pthread_mutex_unlock(&_queueBuffersMutex);
@@ -1660,9 +1663,9 @@ void audioRouteChangeListenerCallback (
     _inuse[bufIndex] = false;
     _buffersUsed--;
     
-#if LOG_QUEUED_BUFFERS
-    NSLog(@"Queued buffers: %ld", (long)_buffersUsed);
-#endif
+//#if LOG_QUEUED_BUFFERS
+//    NSLog(@"Queued buffers: %ld", (long)_buffersUsed);
+//#endif
     
     pthread_cond_signal(&_queueBufferReadyCondition);
     pthread_mutex_unlock(&_queueBuffersMutex);
@@ -1701,7 +1704,7 @@ void audioRouteChangeListenerCallback (
     {
         if (inID == kAudioQueueProperty_IsRunning)
         {
-            if (_state == AS_STOPPING)
+            if (_state == ASP_STOPPING)
             {
                 // Should check value of isRunning to ensure this kAudioQueueProperty_IsRunning isn't
                 // the *start* of a very short stream
@@ -1710,10 +1713,10 @@ void audioRouteChangeListenerCallback (
                 AudioQueueGetProperty(_audioQueue, inID, &isRunning, &size);
                 if (isRunning == 0)
                 {
-                    self.state = AS_STOPPED;
+                    self.state = ASP_STOPPED;
                 }
             }
-            else if (_state == AS_WAITING_FOR_QUEUE_TO_START)
+            else if (_state == ASP_WAITING_FOR_QUEUE_TO_START)
             {
                 //
                 // Note about this bug avoidance quirk:
@@ -1732,7 +1735,7 @@ void audioRouteChangeListenerCallback (
                 //
                 [NSRunLoop currentRunLoop];
                 
-                self.state = AS_PLAYING;
+                self.state = ASP_PLAYING;
             }
             else
             {
@@ -1783,41 +1786,41 @@ void audioRouteChangeListenerCallback (
         
         if (_err)
         {
-            [self failWithErrorCode:AS_AUDIO_QUEUE_ENQUEUE_FAILED];
+            [self failWithErrorCode:ASP_AUDIO_QUEUE_ENQUEUE_FAILED];
             return;
         }
         
         
-        if (_state == AS_BUFFERING ||
-            _state == AS_WAITING_FOR_DATA ||
-            _state == AS_FLUSHING_EOF ||
-            (_state == AS_STOPPED && _stopReason == AS_STOPPING_TEMPORARILY))
+        if (_state == ASP_BUFFERING ||
+            _state == ASP_WAITING_FOR_DATA ||
+            _state == ASP_FLUSHING_EOF ||
+            (_state == ASP_STOPPED && _stopReason == ASP_STOPPING_TEMPORARILY))
         {
             //
             // Fill all the buffers before starting. This ensures that the
             // AudioFileStream stays a small amount ahead of the AudioQueue to
             // avoid an audio glitch playing streaming files on iPhone SDKs < 3.0
             //
-            if (_state == AS_FLUSHING_EOF || _buffersUsed == NUM_AQ_BUFS - 1)
+            if (_state == ASP_FLUSHING_EOF || _buffersUsed == NUM_AQ_BUFS - 1)
             {
-                if (self.state == AS_BUFFERING)
+                if (self.state == ASP_BUFFERING)
                 {
                     _err = AudioQueueStart(_audioQueue, NULL);
                     if (_err)
                     {
-                        [self failWithErrorCode:AS_AUDIO_QUEUE_START_FAILED];
+                        [self failWithErrorCode:ASP_AUDIO_QUEUE_START_FAILED];
                         return;
                     }
-                    self.state = AS_PLAYING;
+                    self.state = ASP_PLAYING;
                 }
                 else
                 {
-                    self.state = AS_WAITING_FOR_QUEUE_TO_START;
+                    self.state = ASP_WAITING_FOR_QUEUE_TO_START;
                     
                     _err = AudioQueueStart(_audioQueue, NULL);
                     if (_err)
                     {
-                        [self failWithErrorCode:AS_AUDIO_QUEUE_START_FAILED];
+                        [self failWithErrorCode:ASP_AUDIO_QUEUE_START_FAILED];
                         return;
                     }
                 }
@@ -1854,19 +1857,19 @@ void audioRouteChangeListenerCallback (
     _packetDuration = _asbd.mFramesPerPacket / _sampleRate;
     
     // create the audio queue
-    _err = AudioQueueNewOutput(&_asbd, ASAudioQueueOutputCallback, (__bridge void *)(self), NULL, NULL, 0, &_audioQueue);
+    _err = AudioQueueNewOutput(&_asbd, ASPAudioQueueOutputCallback, (__bridge void *)(self), NULL, NULL, 0, &_audioQueue);
     if (_err)
     {
-        [self failWithErrorCode:AS_AUDIO_QUEUE_CREATION_FAILED];
+        [self failWithErrorCode:ASP_AUDIO_QUEUE_CREATION_FAILED];
         return;
     }
     
     // start the queue if it has not been started already
     // listen to the "isRunning" property
-    _err = AudioQueueAddPropertyListener(_audioQueue, kAudioQueueProperty_IsRunning, ASAudioQueueIsRunningCallback, (__bridge void *)(self));
+    _err = AudioQueueAddPropertyListener(_audioQueue, kAudioQueueProperty_IsRunning, ASPAudioQueueIsRunningCallback, (__bridge void *)(self));
     if (_err)
     {
-        [self failWithErrorCode:AS_AUDIO_QUEUE_ADD_LISTENER_FAILED];
+        [self failWithErrorCode:ASP_AUDIO_QUEUE_ADD_LISTENER_FAILED];
         return;
     }
     
@@ -1889,7 +1892,7 @@ void audioRouteChangeListenerCallback (
         _err = AudioQueueAllocateBuffer(_audioQueue, _packetBufferSize, &_audioQueueBuffer[i]);
         if (_err)
         {
-            [self failWithErrorCode:AS_AUDIO_QUEUE_BUFFER_ALLOCATION_FAILED];
+            [self failWithErrorCode:ASP_AUDIO_QUEUE_BUFFER_ALLOCATION_FAILED];
             return;
         }
     }

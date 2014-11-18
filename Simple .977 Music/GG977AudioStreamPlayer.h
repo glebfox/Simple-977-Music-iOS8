@@ -23,7 +23,6 @@
 - (void)playerDidPausePlaying:(GG977AudioStreamPlayer *)player;
 - (void)playerDidStopPlaying:(GG977AudioStreamPlayer *)player;
 
-//- (void)playerDidStartReceivingTrackInfo:(GG977AudioStreamPlayer *)player;
 - (void)player:(GG977AudioStreamPlayer *)player didReceiveTrackInfo:(GG977TrackInfo *)info;
 
 @end
