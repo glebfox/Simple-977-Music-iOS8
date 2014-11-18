@@ -8,7 +8,7 @@
 
 #import "GG977DetailTrackInfoViewController.h"
 #import "GG977TrackInfo.h"
-#import "GG977DataModel.h"
+#import "GG977StationsProvider.h"
 #import "GG977StationInfo.h"
 
 @interface GG977DetailTrackInfoViewController ()
@@ -41,7 +41,11 @@
 
 - (void)updateTrackInfo {
     if (self.trackInfo) {
-        self.albumImage.image = [UIImage imageWithData:[NSData dataWithContentsOfURL:self.trackInfo.imageUrl]];
+        
+        [NSURLConnection sendAsynchronousRequest:[NSURLRequest requestWithURL:self.trackInfo.imageUrl] queue:[NSOperationQueue mainQueue] completionHandler:^(NSURLResponse *response, NSData *data, NSError *connectionError) {
+            self.albumImage.image = [UIImage imageWithData:data];
+        }];
+        
         self.artistLabel.text = self.trackInfo.artist;
         self.trackLabel.text = self.trackInfo.track;
         self.albumName.text = self.trackInfo.album;
@@ -49,11 +53,11 @@
         [self.lyricsWebView loadHTMLString:self.trackInfo.lyrics baseURL:nil];
     } else {
         self.albumImage.image = [UIImage imageNamed:@"EmptyLogo"];
-        self.artistLabel.text = @"[No data]";
-        self.trackLabel.text = @"[No data]";
-        self.albumName.text = @"[No data]";
-        self.year.text = @"[No data]";
-        [self.lyricsWebView loadHTMLString:@"[No data]" baseURL:nil];
+        self.artistLabel.text = @"";
+        self.trackLabel.text = @"";
+        self.albumName.text = @"";
+        self.year.text = @"";
+        [self.lyricsWebView loadHTMLString:@"" baseURL:nil];
     }
 }
 

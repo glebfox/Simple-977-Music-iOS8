@@ -7,7 +7,7 @@
 //
 
 #import <UIKit/UIKit.h>
-#import <AudioToolbox/AudioToolbox.h>
+#import "GG977MetadataParser.h"
 
 @class GG977StationInfo;
 
@@ -24,11 +24,11 @@
 - (void)playerDidStopPlaying:(GG977AudioStreamPlayer *)player;
 
 //- (void)playerDidStartReceivingTrackInfo:(GG977AudioStreamPlayer *)player;
-//- (void)player:(GG977AudioStreamPlayer *)player didReceiveTrackInfo:(GG977TrackInfo *)info;
+- (void)player:(GG977AudioStreamPlayer *)player didReceiveTrackInfo:(GG977TrackInfo *)info;
 
 @end
 
-@interface GG977AudioStreamPlayer : NSObject
+@interface GG977AudioStreamPlayer : NSObject <GG977MetadataParserDelegate>
 
 @property (nonatomic, weak) id<GG977AudioStreamPlayerDelegate> delegate;
 
@@ -44,5 +44,3 @@
 - (BOOL)isAborted;
 
 @end
-
-//extern NSString * const ASStatusChangedNotification;

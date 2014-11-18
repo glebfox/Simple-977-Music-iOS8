@@ -20,10 +20,11 @@
 		7E86C41619DC1D8B00BCB729 /* GG977StationsViewController.m in Sources */ = {isa = PBXBuildFile; fileRef = 7E86C41519DC1D8B00BCB729 /* GG977StationsViewController.m */; };
 		7E86C41919DC205A00BCB729 /* GG977StationInfo.m in Sources */ = {isa = PBXBuildFile; fileRef = 7E86C41819DC205A00BCB729 /* GG977StationInfo.m */; };
 		7E86C41B19DD17BA00BCB729 /* Stations.plist in Resources */ = {isa = PBXBuildFile; fileRef = 7E86C41A19DD17BA00BCB729 /* Stations.plist */; };
-		7E86C41F19DD1A8300BCB729 /* GG977DataModel.m in Sources */ = {isa = PBXBuildFile; fileRef = 7E86C41E19DD1A8300BCB729 /* GG977DataModel.m */; };
+		7E86C41F19DD1A8300BCB729 /* GG977StationsProvider.m in Sources */ = {isa = PBXBuildFile; fileRef = 7E86C41E19DD1A8300BCB729 /* GG977StationsProvider.m */; };
 		7E86C42419DD855800BCB729 /* Localizable.strings in Resources */ = {isa = PBXBuildFile; fileRef = 7E86C42619DD855800BCB729 /* Localizable.strings */; };
 		7E9752A719DA8ABE00B215DF /* GG977PlayerViewController.m in Sources */ = {isa = PBXBuildFile; fileRef = 7E9752A619DA8ABE00B215DF /* GG977PlayerViewController.m */; };
 		7EC0878C1A0BA0E200674853 /* GG977MainViewController.m in Sources */ = {isa = PBXBuildFile; fileRef = 7EC0878B1A0BA0E200674853 /* GG977MainViewController.m */; };
+		7EC798601A1B0AC900EBA3D2 /* GG977MetadataParser.m in Sources */ = {isa = PBXBuildFile; fileRef = 7EC7985F1A1B0AC900EBA3D2 /* GG977MetadataParser.m */; };
 		7ECA2DBC1A16126E00F8E2FA /* GG977AudioStreamPlayer.m in Sources */ = {isa = PBXBuildFile; fileRef = 7ECA2DBB1A16126E00F8E2FA /* GG977AudioStreamPlayer.m */; };
 /* End PBXBuildFile section */
 
@@ -61,8 +62,8 @@
 		7E86C41719DC205A00BCB729 /* GG977StationInfo.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = GG977StationInfo.h; sourceTree = "<group>"; };
 		7E86C41819DC205A00BCB729 /* GG977StationInfo.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = GG977StationInfo.m; sourceTree = "<group>"; };
 		7E86C41A19DD17BA00BCB729 /* Stations.plist */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.plist.xml; path = Stations.plist; sourceTree = "<group>"; };
-		7E86C41D19DD1A8300BCB729 /* GG977DataModel.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = GG977DataModel.h; sourceTree = "<group>"; };
-		7E86C41E19DD1A8300BCB729 /* GG977DataModel.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = GG977DataModel.m; sourceTree = "<group>"; };
+		7E86C41D19DD1A8300BCB729 /* GG977StationsProvider.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = GG977StationsProvider.h; sourceTree = "<group>"; };
+		7E86C41E19DD1A8300BCB729 /* GG977StationsProvider.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = GG977StationsProvider.m; sourceTree = "<group>"; };
 		7E86C42319DD851C00BCB729 /* ru */ = {isa = PBXFileReference; lastKnownFileType = text.plist.strings; name = ru; path = ru.lproj/Main.strings; sourceTree = "<group>"; };
 		7E86C42519DD855800BCB729 /* ru */ = {isa = PBXFileReference; lastKnownFileType = text.plist.strings; name = ru; path = ru.lproj/Localizable.strings; sourceTree = "<group>"; };
 		7E86C42719DD855900BCB729 /* Base */ = {isa = PBXFileReference; lastKnownFileType = text.plist.strings; name = Base; path = Base.lproj/Localizable.strings; sourceTree = "<group>"; };
@@ -70,6 +71,8 @@
 		7E9752A619DA8ABE00B215DF /* GG977PlayerViewController.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = GG977PlayerViewController.m; sourceTree = "<group>"; };
 		7EC0878A1A0BA0E200674853 /* GG977MainViewController.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = GG977MainViewController.h; sourceTree = "<group>"; };
 		7EC0878B1A0BA0E200674853 /* GG977MainViewController.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = GG977MainViewController.m; sourceTree = "<group>"; };
+		7EC7985E1A1B0AC900EBA3D2 /* GG977MetadataParser.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = GG977MetadataParser.h; sourceTree = "<group>"; };
+		7EC7985F1A1B0AC900EBA3D2 /* GG977MetadataParser.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = GG977MetadataParser.m; sourceTree = "<group>"; };
 		7ECA2DBA1A16126E00F8E2FA /* GG977AudioStreamPlayer.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = GG977AudioStreamPlayer.h; sourceTree = "<group>"; };
 		7ECA2DBB1A16126E00F8E2FA /* GG977AudioStreamPlayer.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = GG977AudioStreamPlayer.m; sourceTree = "<group>"; };
 /* End PBXFileReference section */
@@ -166,6 +169,7 @@
 			children = (
 				7E86C42619DD855800BCB729 /* Localizable.strings */,
 				7E860EB01A11FE39007A20CB /* Player */,
+				7EC7985D1A1B0A8C00EBA3D2 /* Metadata parser */,
 				7E86C41C19DD199600BCB729 /* Stations */,
 			);
 			name = Model;
@@ -211,8 +215,6 @@
 				7ECA2DBB1A16126E00F8E2FA /* GG977AudioStreamPlayer.m */,
 				7E860EB11A11FE55007A20CB /* GG977AudioStreamPlayer_hilvl.h */,
 				7E860EB21A11FE55007A20CB /* GG977AudioStreamPlayer_hilvl.m */,
-				7E860EB41A11FF72007A20CB /* GG977TrackInfo.h */,
-				7E860EB51A11FF72007A20CB /* GG977TrackInfo.m */,
 			);
 			name = Player;
 			sourceTree = "<group>";
@@ -221,8 +223,8 @@
 			isa = PBXGroup;
 			children = (
 				7E86C41A19DD17BA00BCB729 /* Stations.plist */,
-				7E86C41D19DD1A8300BCB729 /* GG977DataModel.h */,
-				7E86C41E19DD1A8300BCB729 /* GG977DataModel.m */,
+				7E86C41D19DD1A8300BCB729 /* GG977StationsProvider.h */,
+				7E86C41E19DD1A8300BCB729 /* GG977StationsProvider.m */,
 				7E86C41719DC205A00BCB729 /* GG977StationInfo.h */,
 				7E86C41819DC205A00BCB729 /* GG977StationInfo.m */,
 			);
@@ -235,6 +237,17 @@
 				7E057EFD19DA7FCF004F5304 /* Images.xcassets */,
 			);
 			name = Resources;
+			sourceTree = "<group>";
+		};
+		7EC7985D1A1B0A8C00EBA3D2 /* Metadata parser */ = {
+			isa = PBXGroup;
+			children = (
+				7E860EB41A11FF72007A20CB /* GG977TrackInfo.h */,
+				7E860EB51A11FF72007A20CB /* GG977TrackInfo.m */,
+				7EC7985E1A1B0AC900EBA3D2 /* GG977MetadataParser.h */,
+				7EC7985F1A1B0AC900EBA3D2 /* GG977MetadataParser.m */,
+			);
+			name = "Metadata parser";
 			sourceTree = "<group>";
 		};
 /* End PBXGroup section */
@@ -345,9 +358,10 @@
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
-				7E86C41F19DD1A8300BCB729 /* GG977DataModel.m in Sources */,
+				7E86C41F19DD1A8300BCB729 /* GG977StationsProvider.m in Sources */,
 				7E9752A719DA8ABE00B215DF /* GG977PlayerViewController.m in Sources */,
 				7E860EB61A11FF72007A20CB /* GG977TrackInfo.m in Sources */,
+				7EC798601A1B0AC900EBA3D2 /* GG977MetadataParser.m in Sources */,
 				7E86C41619DC1D8B00BCB729 /* GG977StationsViewController.m in Sources */,
 				7E860EB31A11FE55007A20CB /* GG977AudioStreamPlayer_hilvl.m in Sources */,
 				7E4147B01A19D133007FCE8F /* GG977DetailTrackInfoViewController.m in Sources */,

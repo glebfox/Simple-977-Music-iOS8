@@ -8,7 +8,7 @@
 
 #import "GG977MainViewController.h"
 #import "GG977PlayerViewController.h"
-#import "GG977DataModel.h"
+#import "GG977StationsProvider.h"
 
 @interface GG977MainViewController ()
 
@@ -63,7 +63,7 @@
     
     if (_stationsViewController) {
         _stationsViewController.delegate = self;
-        _stationsViewController.dataModel = [GG977DataModel new];
+        _stationsViewController.stationsProvider = [GG977StationsProvider new];
     }
 }
 

@@ -6,16 +6,16 @@
 //  Copyright (c) 2014 Gleb Gorelov. All rights reserved.
 //
 
-#import "GG977DataModel.h"
+#import "GG977StationsProvider.h"
 #import "GG977StationInfo.h"
 
-@interface GG977DataModel ()
+@interface GG977StationsProvider ()
 
 @property (nonatomic, strong) NSArray *allStations;
 
 @end
 
-@implementation GG977DataModel
+@implementation GG977StationsProvider
 
 - (id)init
 {

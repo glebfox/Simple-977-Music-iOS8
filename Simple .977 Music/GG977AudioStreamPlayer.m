@@ -8,7 +8,7 @@
 
 #import "GG977AudioStreamPlayer.h"
 #import <CFNetwork/CFNetwork.h>
-//#import <AVFoundation/AVFoundation.h>
+#import <AudioToolbox/AudioToolbox.h>
 #include <pthread.h>
 #import "GG977StationInfo.h"
 
@@ -115,14 +115,10 @@ typedef enum
                               buffer:(AudioQueueBufferRef)inBuffer;
 - (void)handlePropertyChangeForQueue:(AudioQueueRef)inAQ
                           propertyID:(AudioQueuePropertyID)inID;
-
-//- (void)handleInterruptionChangeToState:(NSNotification *)notification;
-
-//- (void)internalSeekToTime:(double)newSeekTime;
-//- (void)enqueueBuffer;
 - (void)handleReadFromStream:(CFReadStreamRef)aStream eventType:(CFStreamEventType)eventType;
 
 @property (nonatomic, strong) GG977StationInfo *station;
+@property (nonatomic, strong) GG977MetadataParser *metadataParser;
 
 @end
 
@@ -278,6 +274,7 @@ void audioRouteChangeListenerCallback (
 }
 
 @implementation GG977AudioStreamPlayer {
+#warning delete
     NSURL *_url;     // URL стрима
     
     //
@@ -311,7 +308,7 @@ void audioRouteChangeListenerCallback (
     bool                            _inuse[NUM_AQ_BUFS];	// flags to indicate that a buffer is still in use
     NSInteger                       _buffersUsed;
     NSDictionary *                  _httpHeaders;
-#warning не нужен
+#warning не нужен?
     bool                            _discontinuous;             // flag to indicate middle of the stream
     
     pthread_mutex_t                 _queueBuffersMutex;			// a mutex to protect the inuse flags
@@ -320,6 +317,7 @@ void audioRouteChangeListenerCallback (
     
     UInt32                          _bitRate;                   // Bits per second in the file
     NSInteger                       _dataOffset;        // Offset of the first audio packet in the stream
+#warning не нужен?
     NSInteger                       _fileLength;		// Length of the file in bytes
     NSInteger                       _seekByteOffset;	// Seek offset within the file in bytes
     UInt64                          _audioDataByteCount;// Used when the actual number of audio bytes in
@@ -329,14 +327,14 @@ void audioRouteChangeListenerCallback (
     UInt64                          _processedPacketsCount;		// number of packets accumulated for bitrate estimation
     UInt64                          _processedPacketsSizeTotal;	// byte size of accumulated estimation packets
     
-    double                          _seekTime;
-    BOOL                            _seekWasRequested;
-    double                          _requestedSeekTime;
+//    double                          _seekTime;
+//    BOOL                            _seekWasRequested;
+//    double                          _requestedSeekTime;
     double                          _sampleRate;		// Sample rate of the file (used to compare with
                                                         // samples played by the queue for current playback
                                                         // time)
     double                          _packetDuration;	// sample rate times frames per packet
-    double                          _lastProgress;		// last calculated progress point
+//    double                          _lastProgress;		// last calculated progress point
     
 //    BOOL                            _pausedByInterruption;
 }
@@ -351,14 +349,13 @@ void audioRouteChangeListenerCallback (
         NSLog(@"PLAYER - INIT");
         NSLog(@"%@", station);
         _station = station;
+        _metadataParser = [[GG977MetadataParser alloc] initWithInterval:5];
+        _metadataParser.stationID = _station.externalID;
+        _metadataParser.delegate = self;
 #warning delete _url
         _url = _station.url;
-        [[NSNotificationCenter defaultCenter] addObserver:self selector:@selector(handleInterruptionChangeToState:) name:ASAudioSessionInterruptionOccuredNotification object:nil];
         
-//        [[NSNotificationCenter defaultCenter] addObserver:self
-//                                                 selector:@selector(routeChanged:)
-//                                                     name:AVAudioSessionRouteChangeNotification
-//                                                   object:nil];
+        [[NSNotificationCenter defaultCenter] addObserver:self selector:@selector(handleInterruptionChangeToState:) name:ASAudioSessionInterruptionOccuredNotification object:nil];
     }
     return self;
 }
@@ -367,8 +364,6 @@ void audioRouteChangeListenerCallback (
 {
     NSLog(@"PLAYER - DEALLOC");
     [[NSNotificationCenter defaultCenter] removeObserver:self name:ASAudioSessionInterruptionOccuredNotification object:nil];
-    
-//    [[NSNotificationCenter defaultCenter] removeObserver:self name:name:AVAudioSessionRouteChangeNotification object:nil];
     
     [self stop];
 }
@@ -514,6 +509,8 @@ void audioRouteChangeListenerCallback (
              selector:@selector(startInternal)
              object:nil];
             [_internalThread start];
+            
+            [self.metadataParser start];
         }
     }
 }
@@ -529,6 +526,7 @@ void audioRouteChangeListenerCallback (
 - (void)stop
 {
     NSLog(@"stop");
+    [self.metadataParser stop];
     @synchronized(self)
     {
         if (_audioQueue &&
@@ -740,7 +738,7 @@ void audioRouteChangeListenerCallback (
  */
 - (void)startInternal
 {
-    NSLog(@"startInternal");
+//    NSLog(@"startInternal");
     
     @synchronized(self)
     {
@@ -889,7 +887,7 @@ void audioRouteChangeListenerCallback (
  */
 - (BOOL)openReadStream
 {
-    NSLog(@"openReadStream");
+//    NSLog(@"openReadStream");
     @synchronized(self)
     {
         NSAssert([[NSThread currentThread] isEqual:_internalThread],
@@ -1325,7 +1323,7 @@ void audioRouteChangeListenerCallback (
                      fileStreamPropertyID:(AudioFileStreamPropertyID)inPropertyID
                                   ioFlags:(UInt32 *)ioFlags
 {
-    NSLog(@"handlePropertyChangeForFileStream");
+//    NSLog(@"handlePropertyChangeForFileStream");
     @synchronized(self)
     {
         if ([self isFinishing])
@@ -1335,12 +1333,12 @@ void audioRouteChangeListenerCallback (
         
         if (inPropertyID == kAudioFileStreamProperty_ReadyToProducePackets)
         {
-            NSLog(@"kAudioFileStreamProperty_ReadyToProducePackets");
+//            NSLog(@"kAudioFileStreamProperty_ReadyToProducePackets");
             _discontinuous = true;
         }
         else if (inPropertyID == kAudioFileStreamProperty_DataOffset)
         {
-            NSLog(@"kAudioFileStreamProperty_DataOffset");
+//            NSLog(@"kAudioFileStreamProperty_DataOffset");
             SInt64 offset;
             UInt32 offsetSize = sizeof(offset);
             _err = AudioFileStreamGetProperty(inAudioFileStream, kAudioFileStreamProperty_DataOffset, &offsetSize, &offset);
@@ -1350,11 +1348,11 @@ void audioRouteChangeListenerCallback (
                 return;
             }
             _dataOffset = offset;
-            NSLog(@"_dataOffset = %d", _dataOffset);
+//            NSLog(@"_dataOffset = %d", _dataOffset);
             if (_audioDataByteCount)
             {
                 _fileLength = _dataOffset + _audioDataByteCount;
-                NSLog(@"_fileLength = %d", _fileLength);
+//                NSLog(@"_fileLength = %d", _fileLength);
             }
         }
         else if (inPropertyID == kAudioFileStreamProperty_AudioDataByteCount)
@@ -1368,22 +1366,23 @@ void audioRouteChangeListenerCallback (
                 return;
             }
             _fileLength = _dataOffset + _audioDataByteCount;
-            NSLog(@"_fileLength = %d", _fileLength);
+//            NSLog(@"_fileLength = %d", _fileLength);
         }
         else if (inPropertyID == kAudioFileStreamProperty_DataFormat)
         {
-            NSLog(@"kAudioFileStreamProperty_DataFormat");
+//            NSLog(@"kAudioFileStreamProperty_DataFormat");
             if (_asbd.mSampleRate == 0)
             {
-                NSLog(@"mBitsPerChannel = %d", (unsigned int)_asbd.mBitsPerChannel);
-                NSLog(@"mBytesPerFrame = %d", (unsigned int)_asbd.mBytesPerFrame);
-                NSLog(@"mBytesPerPacket = %d", (unsigned int)_asbd.mBytesPerPacket);
-                NSLog(@"mChannelsPerFrame = %d", (unsigned int)_asbd.mChannelsPerFrame);
-                NSLog(@"mFormatFlags = %d", (unsigned int)_asbd.mFormatFlags);
-                NSLog(@"mFormatID = %d", (unsigned int)_asbd.mFormatID);
-                NSLog(@"mFramesPerPacket = %d", (unsigned int)_asbd.mFramesPerPacket);
-                NSLog(@"mReserved = %d", (unsigned int)_asbd.mReserved);
-                NSLog(@"mSampleRate = %d", (unsigned int)_asbd.mSampleRate);
+                NSLog(@"************* _asbd.mSampleRate == 0 **************");
+//                NSLog(@"mBitsPerChannel = %d", (unsigned int)_asbd.mBitsPerChannel);
+//                NSLog(@"mBytesPerFrame = %d", (unsigned int)_asbd.mBytesPerFrame);
+//                NSLog(@"mBytesPerPacket = %d", (unsigned int)_asbd.mBytesPerPacket);
+//                NSLog(@"mChannelsPerFrame = %d", (unsigned int)_asbd.mChannelsPerFrame);
+//                NSLog(@"mFormatFlags = %d", (unsigned int)_asbd.mFormatFlags);
+//                NSLog(@"mFormatID = %d", (unsigned int)_asbd.mFormatID);
+//                NSLog(@"mFramesPerPacket = %d", (unsigned int)_asbd.mFramesPerPacket);
+//                NSLog(@"mReserved = %d", (unsigned int)_asbd.mReserved);
+//                NSLog(@"mSampleRate = %d", (unsigned int)_asbd.mSampleRate);
                 
                 UInt32 asbdSize = sizeof(_asbd);
                 
@@ -1395,20 +1394,10 @@ void audioRouteChangeListenerCallback (
                     return;
                 }
             }
-            
-            NSLog(@"mBitsPerChannel = %d", (unsigned int)_asbd.mBitsPerChannel);
-            NSLog(@"mBytesPerFrame = %d", (unsigned int)_asbd.mBytesPerFrame);
-            NSLog(@"mBytesPerPacket = %d", (unsigned int)_asbd.mBytesPerPacket);
-            NSLog(@"mChannelsPerFrame = %d", (unsigned int)_asbd.mChannelsPerFrame);
-            NSLog(@"mFormatFlags = %d", (unsigned int)_asbd.mFormatFlags);
-            NSLog(@"mFormatID = %d", (unsigned int)_asbd.mFormatID);
-            NSLog(@"mFramesPerPacket = %d", (unsigned int)_asbd.mFramesPerPacket);
-            NSLog(@"mReserved = %d", (unsigned int)_asbd.mReserved);
-            NSLog(@"mSampleRate = %d", (unsigned int)_asbd.mSampleRate);
         }
         else if (inPropertyID == kAudioFileStreamProperty_FormatList)
         {
-            NSLog(@"kAudioFileStreamProperty_FormatList");
+//            NSLog(@"kAudioFileStreamProperty_FormatList");
             Boolean outWriteable;
             UInt32 formatListSize;
             _err = AudioFileStreamGetPropertyInfo(inAudioFileStream, kAudioFileStreamProperty_FormatList, &formatListSize, &outWriteable);
@@ -1431,11 +1420,10 @@ void audioRouteChangeListenerCallback (
             {
                 AudioStreamBasicDescription pasbd = formatList[i].mASBD;
                 
-                NSLog(@"%d pasbd.mFormatID = %d", i, (unsigned int)pasbd.mFormatID);
-                
                 if (pasbd.mFormatID == kAudioFormatMPEG4AAC_HE ||
                     pasbd.mFormatID == kAudioFormatMPEG4AAC_HE_V2)
                 {
+//                    NSLog(@"kAudioFormatMPEG4AAC_HE");
                     //
                     // We've found HE-AAC, remember this to tell the audio queue
                     // when we construct it.
@@ -1450,7 +1438,7 @@ void audioRouteChangeListenerCallback (
         }
         else
         {
-            NSLog(@"Property is %c%c%c%c", ((char *)&inPropertyID)[3], ((char *)&inPropertyID)[2], ((char *)&inPropertyID)[1], ((char *)&inPropertyID)[0]);
+//            NSLog(@"Property is %c%c%c%c", ((char *)&inPropertyID)[3], ((char *)&inPropertyID)[2], ((char *)&inPropertyID)[1], ((char *)&inPropertyID)[0]);
         }
     }
 }
@@ -1469,7 +1457,7 @@ void audioRouteChangeListenerCallback (
              numberPackets:(UInt32)inNumberPackets
         packetDescriptions:(AudioStreamPacketDescription *)inPacketDescriptions;
 {
-    //    NSLog(@"handleAudioPackets");
+//    NSLog(@"handleAudioPackets");
     @synchronized(self)
     {
         if ([self isFinishing])
@@ -1479,6 +1467,7 @@ void audioRouteChangeListenerCallback (
         
         if (_bitRate == 0)
         {
+//            NSLog(@"_bitRate == 0");
             //
             // m4a and a few other formats refuse to parse the bitrate so
             // we need to set an "unparseable" condition here. If you know
@@ -1492,11 +1481,13 @@ void audioRouteChangeListenerCallback (
         // clear the "discontinuous" flag
         if (_discontinuous)
         {
+//            NSLog(@"_discontinuous");
             _discontinuous = false;
         }
         
         if (!_audioQueue)
         {
+//            NSLog(@"!_audioQueue");
             [self createQueue];
         }
     }
@@ -1504,6 +1495,7 @@ void audioRouteChangeListenerCallback (
     // the following code assumes we're streaming VBR data. for CBR data, the second branch is used.
     if (inPacketDescriptions)
     {
+//        NSLog(@"inPacketDescriptions");
         for (int i = 0; i < inNumberPackets; ++i)
         {
             SInt64 packetOffset = inPacketDescriptions[i].mStartOffset;
@@ -1578,6 +1570,7 @@ void audioRouteChangeListenerCallback (
     }
     else
     {
+        NSLog(@"else inPacketDescriptions");
         size_t offset = 0;
         while (inNumberBytes)
         {
@@ -1925,6 +1918,14 @@ void audioRouteChangeListenerCallback (
     if (ignorableError)
     {
         return;
+    }
+}
+
+#pragma mark - GG977MetadataParserDelegate
+
+- (void)parser:(GG977MetadataParser *)parser didParseNewTrackInfo:(GG977TrackInfo *)trackInfo {
+    if ([self.delegate respondsToSelector:@selector(player:didReceiveTrackInfo:)]) {
+        [self.delegate player:self didReceiveTrackInfo:trackInfo];
     }
 }
 

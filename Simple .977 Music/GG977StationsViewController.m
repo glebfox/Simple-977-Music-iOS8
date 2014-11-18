@@ -7,7 +7,7 @@
 //
 
 #import "GG977StationsViewController.h"
-#import "GG977DataModel.h"
+#import "GG977StationsProvider.h"
 #import "GG977StationInfo.h"
 
 @interface GG977StationsViewController ()
@@ -32,7 +32,7 @@
 - (NSInteger)tableView:(UITableView *)tableView numberOfRowsInSection:(NSInteger)section
 {
     // Return the number of rows in the section.
-    return [[self.dataModel allStations] count];
+    return [[self.stationsProvider allStations] count];
 }
 
 - (UITableViewCell *)tableView:(UITableView *)tableView cellForRowAtIndexPath:(NSIndexPath *)indexPath
@@ -41,7 +41,7 @@
     UITableViewCell *cell = [tableView dequeueReusableCellWithIdentifier:CellIdentider forIndexPath:indexPath];
     
     // Configure the cell...
-    cell.textLabel.text = [[self.dataModel allStations][indexPath.row] title];
+    cell.textLabel.text = [[self.stationsProvider allStations][indexPath.row] title];
     
     return cell;
 }
@@ -51,7 +51,7 @@
 - (void)tableView:(UITableView *)tableView didSelectRowAtIndexPath:(NSIndexPath *)indexPath
 {    
     if ([self.delegate respondsToSelector:@selector(stationsViewController:didSelectStation:)]) {
-        [self.delegate stationsViewController:self didSelectStation:[[self.dataModel allStations] objectAtIndex:indexPath.row]];
+        [self.delegate stationsViewController:self didSelectStation:[[self.stationsProvider allStations] objectAtIndex:indexPath.row]];
     }
 }
 

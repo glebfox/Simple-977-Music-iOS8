@@ -10,4 +10,13 @@
 
 @implementation GG977TrackInfo
 
+- (BOOL)isEqual:(id)object {
+    if (object == nil) return false;
+    if (object == self) return true;
+    if ([object class] != [GG977TrackInfo class]) return false;
+    
+    GG977TrackInfo *obj = (GG977TrackInfo *)object;
+    return  [self.artist isEqualToString:obj.artist] && [self.track isEqualToString:obj.track];
+}
+
 @end

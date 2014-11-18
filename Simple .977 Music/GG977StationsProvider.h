@@ -8,7 +8,7 @@
 
 #import <Foundation/Foundation.h>
 
-@interface GG977DataModel : NSObject
+@interface GG977StationsProvider : NSObject
 
 - (NSArray *)allStations;
 

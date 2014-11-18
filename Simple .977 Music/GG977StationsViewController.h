@@ -10,7 +10,7 @@
 //#import "GG977StationInfo.h"
 
 @class GG977StationInfo;
-@class GG977DataModel;
+@class GG977StationsProvider;
 @class GG977StationsViewController;
 
 @protocol GG977StationsViewControllerDelegate <NSObject>
@@ -22,6 +22,6 @@
 @interface GG977StationsViewController : UIViewController <UITableViewDelegate, UITableViewDataSource>
 
 @property (nonatomic, weak) id<GG977StationsViewControllerDelegate> delegate;
-@property (nonatomic, strong) GG977DataModel *dataModel;
+@property (nonatomic, strong) GG977StationsProvider *stationsProvider;
 
 @end
