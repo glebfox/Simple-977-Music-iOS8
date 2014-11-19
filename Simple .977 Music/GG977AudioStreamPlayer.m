@@ -302,7 +302,6 @@ static void ASReadStreamCallBack (CFReadStreamRef aStream, CFStreamEventType eve
  */
 - (void)mainThreadStateNotification
 {
-    NSString *strState;
     switch (_state) {
         case ASP_INITIALIZED:
             break;

@@ -83,17 +83,22 @@
         self.stationTitleLabel.text = _stationInfo.title;
         self.imageView.image = [UIImage imageNamed:_stationInfo.title];
         
-        if (self.player != nil) {
-            [self.player stop];
-        }
-        self.player = [[GG977AudioStreamPlayer alloc] initWithStation:_stationInfo];
-        self.player.delegate = self;
+        [self createPlayer];
 
 //        self.trackInfo = nil;
 //        [self updateUIState];
         
         [self playPause:nil];
     }
+}
+
+- (void)createPlayer {
+    if (self.player != nil) {
+        [self.player stop];
+    }
+    
+    self.player = [[GG977AudioStreamPlayer alloc] initWithStation:_stationInfo];
+    self.player.delegate = self;
 }
 
 #pragma mark - UI Updates
@@ -193,11 +198,8 @@
 #pragma mark - GG977AudioStreamPlayerDelegate
 
 - (void)player:(GG977AudioStreamPlayer *)player failedToPrepareForPlaybackWithError:(NSError *)error {
-    self.stationInfo = nil;
-    self.player = nil;
-    self.trackInfo = nil;
-    
-    [self stop];
+
+    [self createPlayer];
     [self updateUIState];
     
     // Если UIAlertController существует, значит версия >= iOS8
