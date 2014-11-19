@@ -50,7 +50,7 @@
         self.trackLabel.text = self.trackInfo.track;
         self.albumName.text = self.trackInfo.album;
         self.year.text = self.trackInfo.year;
-        UIFont *font = [UIFont systemFontOfSize:[UIFont systemFontSize]];
+        UIFont *font = [UIFont systemFontOfSize:17];
         NSString *html = [self htmlStringWithFont:(UIFont *)font];
         [self.lyricsWebView loadHTMLString:html baseURL:nil];
     } else {

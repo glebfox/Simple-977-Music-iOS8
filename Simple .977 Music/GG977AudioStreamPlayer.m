@@ -271,13 +271,17 @@ static void ASReadStreamCallBack (CFReadStreamRef aStream, CFStreamEventType eve
 
 - (id)initWithStation:(GG977StationInfo *)station
 {
+    if (station == nil) {
+        return nil;
+    }
+    
     self = [super init];
     if (self != nil)
     {
 //        NSLog(@"PLAYER - INIT");
 //        NSLog(@"%@", station);
         _station = station;
-        _metadataParser = [[GG977MetadataParser alloc] initWithInterval:5];
+        _metadataParser = [[GG977MetadataParser alloc] initWithInterval:3];
         _metadataParser.stationID = _station.externalID;
         _metadataParser.delegate = self;
         
@@ -288,7 +292,7 @@ static void ASReadStreamCallBack (CFReadStreamRef aStream, CFStreamEventType eve
 
 - (void)dealloc
 {
-//    NSLog(@"PLAYER - DEALLOC");
+    NSLog(@"PLAYER - DEALLOC");
     [[NSNotificationCenter defaultCenter] removeObserver:self name:ASPAudioSessionInterruptionOccuredNotification object:nil];
     
     [self stop];
@@ -305,15 +309,15 @@ static void ASReadStreamCallBack (CFReadStreamRef aStream, CFStreamEventType eve
     switch (_state) {
         case ASP_INITIALIZED:
             strState = @"AS_INITIALIZED";
-            if ([self.delegate respondsToSelector:@selector(playerDidPrepareForPlayback:)]) {
-                [self.delegate playerDidPrepareForPlayback:self];
-            }
+//            if ([self.delegate respondsToSelector:@selector(playerDidPrepareForPlayback:)] && _errorCode == ASP_NO_ERROR) {
+//                [self.delegate playerDidPrepareForPlayback:self];
+//            }
             break;
         case ASP_STARTING_FILE_THREAD:
             strState = @"AS_STARTING_FILE_THREAD";
-            if ([self.delegate respondsToSelector:@selector(playerBeginConnection:)]) {
-                [self.delegate playerBeginConnection:self];
-            }
+//            if ([self.delegate respondsToSelector:@selector(playerBeginConnection:)]) {
+//                [self.delegate playerBeginConnection:self];
+//            }
             break;
         case ASP_WAITING_FOR_DATA:
             strState = @"AS_WAITING_FOR_DATA";
@@ -324,36 +328,39 @@ static void ASReadStreamCallBack (CFReadStreamRef aStream, CFStreamEventType eve
         case ASP_WAITING_FOR_QUEUE_TO_START:
             strState = @"AS_WAITING_FOR_QUEUE_TO_START";
             [self.metadataParser start];
+            if ([self.delegate respondsToSelector:@selector(playerDidStartReceivingTrackInfo:)]) {
+                [self.delegate playerDidStartReceivingTrackInfo:self];
+            }
             break;
         case ASP_PLAYING:
             strState = @"AS_PLAYING";
-            if ([self.delegate respondsToSelector:@selector(playerDidStartPlaying:)]) {
-                [self.delegate playerDidStartPlaying:self];
-            }
+//            if ([self.delegate respondsToSelector:@selector(playerDidStartPlaying:)]) {
+//                [self.delegate playerDidStartPlaying:self];
+//            }
             break;
         case ASP_BUFFERING:
             strState = @"AS_BUFFERING";
-            if ([self.delegate respondsToSelector:@selector(playerBeginBuffering:)]) {
-                [self.delegate playerBeginBuffering:self];
-            }
+//            if ([self.delegate respondsToSelector:@selector(playerBeginBuffering:)]) {
+//                [self.delegate playerBeginBuffering:self];
+//            }
             break;
         case ASP_STOPPING:
             strState = @"AS_STOPPING";
-            if ([self.delegate respondsToSelector:@selector(playerDidStopPlaying:)]) {
-                [self.delegate playerDidStopPlaying:self];
-            }
+//            if ([self.delegate respondsToSelector:@selector(playerDidStopPlaying:)]) {
+//                [self.delegate playerDidStopPlaying:self];
+//            }
             break;
         case ASP_STOPPED:
             strState = @"AS_STOPPED";
-            if ([self.delegate respondsToSelector:@selector(playerDidStopPlaying:)]) {
-                [self.delegate playerDidStopPlaying:self];
-            }
+//            if ([self.delegate respondsToSelector:@selector(playerDidStopPlaying:)]) {
+//                [self.delegate playerDidStopPlaying:self];
+//            }
             break;
         case ASP_PAUSED:
             strState = @"AS_PAUSED";
-            if ([self.delegate respondsToSelector:@selector(playerDidPausePlaying:)]) {
-                [self.delegate playerDidPausePlaying:self];
-            }
+//            if ([self.delegate respondsToSelector:@selector(playerDidPausePlaying:)]) {
+//                [self.delegate playerDidPausePlaying:self];
+//            }
             break;
         default:
             strState = @"UNKNOWN";
@@ -641,6 +648,7 @@ static void ASReadStreamCallBack (CFReadStreamRef aStream, CFStreamEventType eve
 }
 
 - (void)cleanup {
+    NSLog(@"cleanup");
     @synchronized(self)
     {
         // Очищаем stream если он все еще открыт
@@ -868,15 +876,28 @@ static void ASReadStreamCallBack (CFReadStreamRef aStream, CFStreamEventType eve
             AudioQueueStop(_audioQueue, true);
         }
         
+//        [self cleanup];
+        
+//        self.state = ASP_STOPPING;
+//        _stopReason = ASP_STOPPING_ERROR;
+//        AudioQueueStop(_audioQueue, true);
+        
         if ([self.delegate respondsToSelector:@selector(player:failedToPrepareForPlaybackWithError:)]) {
             NSError *error = [NSError errorWithDomain:@"GG977AudioStreamPlayer"
                     code:anErrorCode
                 userInfo:[NSDictionary dictionaryWithObject:
                     [GG977AudioStreamPlayer stringForErrorCode:anErrorCode]
                                                         forKey:NSLocalizedDescriptionKey]];
-            [self.delegate player:self failedToPrepareForPlaybackWithError:error];
+            
+            [self performSelectorOnMainThread:@selector(playerFailedToPrepareForPlaybackWithError:)
+                                   withObject:error
+                                waitUntilDone:NO];
         }
     }
+}
+
+- (void)playerFailedToPrepareForPlaybackWithError:(NSError *)error {
+    [self.delegate player:self failedToPrepareForPlaybackWithError:error];
 }
 
 #pragma mark - handlers
@@ -958,6 +979,22 @@ static void ASReadStreamCallBack (CFReadStreamRef aStream, CFStreamEventType eve
         if ([self isFinishing])
         {
             return;
+        }
+        
+        if (inPropertyID == kAudioFileStreamProperty_DataFormat)
+        {
+            if (_asbd.mSampleRate == 0)
+            {
+                UInt32 asbdSize = sizeof(_asbd);
+                
+                // get the stream format.
+                _err = AudioFileStreamGetProperty(inAudioFileStream, kAudioFileStreamProperty_DataFormat, &asbdSize, &_asbd);
+                if (_err)
+                {
+                    [self failWithErrorCode:ASP_FILE_STREAM_GET_PROPERTY_FAILED];
+                    return;
+                }
+            }
         }
         else if (inPropertyID == kAudioFileStreamProperty_FormatList)
         {
@@ -1148,7 +1185,6 @@ static void ASReadStreamCallBack (CFReadStreamRef aStream, CFStreamEventType eve
             }
             else if (_state == ASP_WAITING_FOR_QUEUE_TO_START)
             {
-                NSLog(@"_state == ASP_WAITING_FOR_QUEUE_TO_START");
                 [NSRunLoop currentRunLoop];
                 self.state = ASP_PLAYING;
             }
@@ -1300,7 +1336,10 @@ static void ASReadStreamCallBack (CFReadStreamRef aStream, CFStreamEventType eve
 #pragma mark - GG977MetadataParserDelegate
 
 - (void)parser:(GG977MetadataParser *)parser didParseNewTrackInfo:(GG977TrackInfo *)trackInfo {
-    if ([self.delegate respondsToSelector:@selector(player:didReceiveTrackInfo:)]) {
+    //  проверка состояния на тот редкий случай, когда плеер остановлен немного позже чем получены метаданные
+    NSLog(@"player - didParseNewTrackInfo:");
+    if ([self.delegate respondsToSelector:@selector(player:didReceiveTrackInfo:)] &&
+        ![self isFinishing] && ![self isIdle]) {
         [self.delegate player:self didReceiveTrackInfo:trackInfo];
     }
 }

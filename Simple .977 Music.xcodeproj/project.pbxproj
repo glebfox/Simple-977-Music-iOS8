@@ -15,7 +15,6 @@
 		7E4147B01A19D133007FCE8F /* GG977DetailTrackInfoViewController.m in Sources */ = {isa = PBXBuildFile; fileRef = 7E4147AF1A19D133007FCE8F /* GG977DetailTrackInfoViewController.m */; };
 		7E5B7FA219E68BA20013D445 /* MediaPlayer.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 7E5B7F9F19E67E030013D445 /* MediaPlayer.framework */; };
 		7E5B7FA419E68C8F0013D445 /* AVFoundation.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 7E5B7FA319E68C8F0013D445 /* AVFoundation.framework */; };
-		7E860EB31A11FE55007A20CB /* GG977AudioStreamPlayer_hilvl.m in Sources */ = {isa = PBXBuildFile; fileRef = 7E860EB21A11FE55007A20CB /* GG977AudioStreamPlayer_hilvl.m */; };
 		7E860EB61A11FF72007A20CB /* GG977TrackInfo.m in Sources */ = {isa = PBXBuildFile; fileRef = 7E860EB51A11FF72007A20CB /* GG977TrackInfo.m */; };
 		7E86C41619DC1D8B00BCB729 /* GG977StationsViewController.m in Sources */ = {isa = PBXBuildFile; fileRef = 7E86C41519DC1D8B00BCB729 /* GG977StationsViewController.m */; };
 		7E86C41919DC205A00BCB729 /* GG977StationInfo.m in Sources */ = {isa = PBXBuildFile; fileRef = 7E86C41819DC205A00BCB729 /* GG977StationInfo.m */; };
@@ -53,8 +52,6 @@
 		7E4147AF1A19D133007FCE8F /* GG977DetailTrackInfoViewController.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = GG977DetailTrackInfoViewController.m; sourceTree = "<group>"; };
 		7E5B7F9F19E67E030013D445 /* MediaPlayer.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = MediaPlayer.framework; path = System/Library/Frameworks/MediaPlayer.framework; sourceTree = SDKROOT; };
 		7E5B7FA319E68C8F0013D445 /* AVFoundation.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = AVFoundation.framework; path = System/Library/Frameworks/AVFoundation.framework; sourceTree = SDKROOT; };
-		7E860EB11A11FE55007A20CB /* GG977AudioStreamPlayer_hilvl.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = GG977AudioStreamPlayer_hilvl.h; sourceTree = "<group>"; };
-		7E860EB21A11FE55007A20CB /* GG977AudioStreamPlayer_hilvl.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = GG977AudioStreamPlayer_hilvl.m; sourceTree = "<group>"; };
 		7E860EB41A11FF72007A20CB /* GG977TrackInfo.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = GG977TrackInfo.h; sourceTree = "<group>"; };
 		7E860EB51A11FF72007A20CB /* GG977TrackInfo.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = GG977TrackInfo.m; sourceTree = "<group>"; };
 		7E86C41419DC1D8B00BCB729 /* GG977StationsViewController.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = GG977StationsViewController.h; sourceTree = "<group>"; };
@@ -213,8 +210,6 @@
 			children = (
 				7ECA2DBA1A16126E00F8E2FA /* GG977AudioStreamPlayer.h */,
 				7ECA2DBB1A16126E00F8E2FA /* GG977AudioStreamPlayer.m */,
-				7E860EB11A11FE55007A20CB /* GG977AudioStreamPlayer_hilvl.h */,
-				7E860EB21A11FE55007A20CB /* GG977AudioStreamPlayer_hilvl.m */,
 			);
 			name = Player;
 			sourceTree = "<group>";
@@ -363,7 +358,6 @@
 				7E860EB61A11FF72007A20CB /* GG977TrackInfo.m in Sources */,
 				7EC798601A1B0AC900EBA3D2 /* GG977MetadataParser.m in Sources */,
 				7E86C41619DC1D8B00BCB729 /* GG977StationsViewController.m in Sources */,
-				7E860EB31A11FE55007A20CB /* GG977AudioStreamPlayer_hilvl.m in Sources */,
 				7E4147B01A19D133007FCE8F /* GG977DetailTrackInfoViewController.m in Sources */,
 				7ECA2DBC1A16126E00F8E2FA /* GG977AudioStreamPlayer.m in Sources */,
 				7E86C41919DC205A00BCB729 /* GG977StationInfo.m in Sources */,

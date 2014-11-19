@@ -11,7 +11,7 @@
 
 @interface GG977MetadataParser ()
 
-@property (nonatomic, strong) GG977TrackInfo *trackInfo;
+@property (nonatomic, strong) GG977TrackInfo *previousTrackInfo;
 @property (nonatomic, weak) NSTimer *timer;
 
 @end
@@ -28,18 +28,21 @@
 }
 
 - (void)start {
+    NSLog(@"parser - start");
+    self.previousTrackInfo = nil;
     self.timer = [NSTimer scheduledTimerWithTimeInterval:_interval target:self selector:@selector(parseTrackInfo) userInfo:nil repeats:YES];
 }
 
 - (void)stop {
+    NSLog(@"parser - stop");
     [self.timer invalidate];
     self.timer = nil;
-    self.trackInfo = nil;
+    self.previousTrackInfo = nil;
 }
 
 - (void)parseTrackInfo {
 //    NSLog(@"parseTrackInfo");
-    NSURL *url = [NSURL URLWithString:[NSString stringWithFormat:@"http://androidfm.org/977music/api/metadata/%d/", self.stationID]];
+    NSURL *url = [NSURL URLWithString:[NSString stringWithFormat:@"http://androidfm.org/977music/api/metadata/%lu/", (unsigned long)self.stationID]];
     
     NSMutableURLRequest *request = [[NSMutableURLRequest alloc] initWithURL:url cachePolicy:NSURLRequestReloadIgnoringLocalAndRemoteCacheData timeoutInterval:60];
     
@@ -77,14 +80,14 @@
             }
         }
         
-        if ((info == nil && !_sentNilMetadata) || (info != nil && ![info isEqual:self.trackInfo])) {
-            self.trackInfo = info;
+        if ((info == nil && !_sentNilMetadata) || (info != nil && ![info isEqual:self.previousTrackInfo])) {
+            self.previousTrackInfo = info;
 
             if ([self.delegate respondsToSelector:@selector(parser:didParseNewTrackInfo:)]) {
-                [self.delegate parser:self didParseNewTrackInfo:self.trackInfo];
+                [self.delegate parser:self didParseNewTrackInfo:info];
             }
             
-            if (self.trackInfo == nil) {
+            if (info == nil) {
                 _sentNilMetadata = YES;
             } else {
                 _sentNilMetadata = NO;

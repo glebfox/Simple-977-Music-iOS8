@@ -16,7 +16,6 @@
 @interface GG977PlayerViewController ()
 
 @property (strong, nonatomic) GG977AudioStreamPlayer *player;
-
 @property (strong, nonatomic) GG977TrackInfo *trackInfo;
 
 @property (weak, nonatomic) IBOutlet UIButton *playStopButton;
@@ -66,25 +65,7 @@
 - (void)viewDidLoad {
     [super viewDidLoad];
     
-    [self disablePlayerButtons];
-    [self clearTrackInfoLabels];
-    [self syncPlayPauseButton];
-    
-    if ([self.player isIdle]) {
-        [self playerDidPrepareForPlayback:nil];
-    }
-    
-    if ([self.player isWaiting]) {
-        NSLog(@"viewDidLoad - Connecting...");
-        self.trackInfoLabel.text = NSLocalizedString(@"Connecting...", nil);
-    }
-    
-    if ([self.player isPlaying]) {
-        self.trackInfoLabel.text = [[[MPNowPlayingInfoCenter defaultCenter] nowPlayingInfo] objectForKey:MPMediaItemPropertyTitle];
-        self.artistInfoLabel.text = [[[MPNowPlayingInfoCenter defaultCenter] nowPlayingInfo] objectForKey:MPMediaItemPropertyArtist];
-        [self syncPlayPauseButton];
-        [self enablePlayerButtons];
-    }
+    [self updateUIState];
 }
 
 - (void)didReceiveMemoryWarning {
@@ -96,8 +77,6 @@
 
 - (void)setStationInfo:(GG977StationInfo *)stationInfo
 {
-//    [[MPNowPlayingInfoCenter defaultCenter] setNowPlayingInfo:nil];
-    
     if (![_stationInfo isEqual:stationInfo]) {
         _stationInfo = stationInfo;
     
@@ -110,9 +89,10 @@
         self.player = [[GG977AudioStreamPlayer alloc] initWithStation:_stationInfo];
         self.player.delegate = self;
 
-        if ([self.player isIdle]) {
-            [self playerDidPrepareForPlayback:nil];
-        }
+//        self.trackInfo = nil;
+//        [self updateUIState];
+        
+        [self playPause:nil];
     }
 }
 
@@ -122,97 +102,121 @@
     return [self.player isPlaying] || [self.player isWaiting];
 }
 
-- (void)clearTrackInfoLabels
-{
-    self.artistInfoLabel.text = @"";
-    self.trackInfoLabel.text = @"";
-
-    if (self.stationInfo != nil) {
-        self.stationTitleLabel.text = self.stationInfo.title;
-        self.imageView.image = [UIImage imageNamed:_stationInfo.title];
-    } else {
-        self.stationTitleLabel.text = NSLocalizedString(@"No Station Title", nil);
-    }
-}
-
 - (void)syncPlayPauseButton
 {
     UIImage *image = [[UIImage imageNamed: [self playerShouldBeStopped] ? @"stop" : @"play"]imageWithRenderingMode:UIImageRenderingModeAlwaysTemplate];
     [self.playStopButton setImage: image forState:UIControlStateNormal];
 }
 
--(void)enablePlayerButtons
-{
-    self.playStopButton.enabled = YES;
-}
-
--(void)disablePlayerButtons
-{
-    self.playStopButton.enabled = NO;
+- (void)updateUIState {
+    if (self.stationInfo != nil) {
+        self.stationTitleLabel.text = self.stationInfo.title;
+        self.imageView.image = [UIImage imageNamed:_stationInfo.title];
+    } else {
+        self.stationTitleLabel.text = NSLocalizedString(@"No Station Title", nil);
+        self.imageView.image = nil;
+    }
+    
+    if (self.trackInfo != nil) {
+        self.artistInfoLabel.text = self.trackInfo.artist;
+        self.trackInfoLabel.text = self.trackInfo.track;
+        
+        NSMutableDictionary *songInfo = [[NSMutableDictionary alloc] init];
+        
+        [songInfo setObject:self.trackInfo.track forKey:MPMediaItemPropertyTitle];
+        [songInfo setObject:self.trackInfo.artist forKey:MPMediaItemPropertyArtist];
+        
+        [[MPNowPlayingInfoCenter defaultCenter] setNowPlayingInfo:songInfo];
+    } else {
+        self.artistInfoLabel.text = @"";
+        self.trackInfoLabel.text = @"";
+        [[MPNowPlayingInfoCenter defaultCenter] setNowPlayingInfo:nil];
+    }
+    
+    if (self.player == nil) {
+        self.playStopButton.enabled = NO;
+    } else {
+        self.playStopButton.enabled = YES;
+        if ([self.player isIdle]) {
+            self.trackInfoLabel.text = NSLocalizedString(@"Press play button to listen", nil);
+        } else if ([self.player isWaiting]) {
+            self.trackInfoLabel.text = NSLocalizedString(@"Connecting...", nil);
+        }
+    }
+    
+    [self syncPlayPauseButton];
 }
 
 #pragma mark - Button Action Methods
 
 - (IBAction)playPause:(id)sender
 {
+    self.trackInfo = nil;
     if ([self playerShouldBeStopped]) {
-        [self.player stop];
+        [self stop];
     } else {
-        [self.player start];
+        [self start];
     }
     
-    self.trackInfo = nil;
+    [self updateUIState];
+}
+
+- (void)start {
+    [[NSNotificationCenter defaultCenter] addObserver:self
+                                             selector:@selector(handleAudioSessionInterruption:)
+                                                 name:AVAudioSessionInterruptionNotification
+                                               object:[AVAudioSession sharedInstance]];
+    
+    [self.player start];
+}
+
+- (void)stop {
+    [self.player stop];
+    
+    [[NSNotificationCenter defaultCenter] removeObserver:self
+                                                    name:AVAudioSessionInterruptionNotification
+                                                  object:[AVAudioSession sharedInstance]];
+
 }
 
 #pragma mark - GG977AudioStreamPlayerDelegate
 
-- (void)playerBeginConnection:(GG977AudioStreamPlayer *)player {
-    [self syncPlayPauseButton];
-    
-    [self clearTrackInfoLabels];
-    self.trackInfoLabel.text = NSLocalizedString(@"Connecting...", nil);
-}
-
-- (void)playerBeginBuffering:(GG977AudioStreamPlayer *)player {
-
-}
-
 - (void)player:(GG977AudioStreamPlayer *)player failedToPrepareForPlaybackWithError:(NSError *)error {
     self.stationInfo = nil;
+    self.player = nil;
+    self.trackInfo = nil;
     
-    [self disablePlayerButtons];
-    [self clearTrackInfoLabels];
-    [self syncPlayPauseButton];
+    [self updateUIState];
     
-    UIAlertView *alertView = [[UIAlertView alloc] initWithTitle:[error localizedDescription]
-                                                        message:[error localizedFailureReason]
-                                                       delegate:nil
-                                              cancelButtonTitle:NSLocalizedString(@"OK", nil)
-                                              otherButtonTitles:nil];
-    [alertView show];
+    // Если UIAlertController существует, значит версия >= iOS8
+    if ([UIAlertController class]) {
+        UIAlertController * alertController = [UIAlertController
+                                                alertControllerWithTitle:[error localizedDescription]
+                                                message:[error localizedFailureReason]
+                                                preferredStyle:UIAlertControllerStyleAlert];
+        
+        UIAlertAction* cancel = [UIAlertAction
+                                 actionWithTitle:@"OK"
+                                 style:UIAlertActionStyleDefault
+                                 handler:^(UIAlertAction * action)
+                                 {
+                                     [alertController dismissViewControllerAnimated:YES completion:nil];
+                                     
+                                 }];
+        [alertController addAction:cancel];
+        [self presentViewController:alertController animated:YES completion:nil];
+    } else {    // Иначе версия < iOS8
+        UIAlertView *alertView = [[UIAlertView alloc] initWithTitle:[error localizedDescription]
+                                                            message:[error localizedFailureReason]
+                                                           delegate:nil
+                                                  cancelButtonTitle:@"OK"
+                                                  otherButtonTitles:nil];
+        [alertView show];
+    }
 }
 
-- (void)playerDidPrepareForPlayback:(GG977AudioStreamPlayer *)player {
-//    NSLog(@"playerDidPrepareForPlayback");
-    
-    [self enablePlayerButtons];
-    [self clearTrackInfoLabels];
-    
-    self.trackInfoLabel.text = NSLocalizedString(@"Press play button to listen", nil);
-    
-//    [self.player start];
-}
-
-- (void)playerDidStartPlaying:(GG977AudioStreamPlayer *)player {
-    [self syncPlayPauseButton];
-}
-
-- (void)playerDidPausePlaying:(GG977AudioStreamPlayer *)player {
-    [self syncPlayPauseButton];
-}
-
-- (void)playerDidStopPlaying:(GG977AudioStreamPlayer *)player {
-    [self syncPlayPauseButton];
+- (void)playerDidStartReceivingTrackInfo:(GG977AudioStreamPlayer *)player {
+        self.trackInfoLabel.text = NSLocalizedString(@"Getting metadata...", nil);
 }
 
 - (void)player:(GG977AudioStreamPlayer *)player didReceiveTrackInfo:(GG977TrackInfo *)info {
@@ -224,15 +228,14 @@
     self.trackInfo = info;
     
     if (self.trackInfo != nil) {
-        self.artistInfoLabel.text = info.artist;
-        self.trackInfoLabel.text = info.track;
+        [self updateUIState];
         
         [NSURLConnection sendAsynchronousRequest:[NSURLRequest requestWithURL:self.trackInfo.imageUrl] queue:[NSOperationQueue mainQueue] completionHandler:^(NSURLResponse *response, NSData *data, NSError *connectionError) {
             self.imageView.image = [UIImage imageWithData:data];
             [self.spinner stopAnimating];
         }];
     } else {
-        [self clearTrackInfoLabels];
+        [self updateUIState];
         self.trackInfoLabel.text = NSLocalizedString(@"No metadata", nil);
         [self.spinner stopAnimating];
     }
@@ -253,6 +256,22 @@
             default:
                 break;
         }
+    }
+}
+
+#pragma mark - Notifications
+
+- (void)handleAudioSessionInterruption:(NSNotification*) notification
+{
+    NSNumber *interruptionType = [[notification userInfo] objectForKey:AVAudioSessionInterruptionTypeKey];
+    if (interruptionType.unsignedIntegerValue == AVAudioSessionInterruptionTypeBegan) {
+        NSLog(@"AVAudioSessionInterruptionTypeBegan");
+        if ([self playerShouldBeStopped]) {
+            NSLog(@"playerShouldBeStopped");
+            [self stop];
+        }
+        self.trackInfo = nil;
+        [self updateUIState];
     }
 }
 
