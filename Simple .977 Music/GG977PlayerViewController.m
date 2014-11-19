@@ -300,10 +300,16 @@
 - (void)prepareForSegue:(UIStoryboardSegue *)segue sender:(id)sender
 {
     if ([[segue identifier] isEqualToString:@"ShowTrackDetail"]) {
-#warning добавить проверки
-        UINavigationController *navController = (UINavigationController *)segue.destinationViewController;
-        GG977DetailTrackInfoViewController *controller = (GG977DetailTrackInfoViewController *)navController.topViewController;
-        controller.trackInfo = self.trackInfo;
+        UIViewController *controller = segue.destinationViewController;
+        if ([controller class] == [UINavigationController class]) {
+            UINavigationController *navController = (UINavigationController *)controller;
+            
+            controller = navController.topViewController;
+            if ([controller class] == [GG977DetailTrackInfoViewController class]) {
+                GG977DetailTrackInfoViewController *detailController = (GG977DetailTrackInfoViewController *)controller;
+                detailController.trackInfo = self.trackInfo;
+            }
+        }
     }
 }
 
