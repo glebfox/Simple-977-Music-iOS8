@@ -30,6 +30,7 @@
 - (void)start {
     NSLog(@"parser - start");
     self.previousTrackInfo = nil;
+    _sentNilMetadata = NO;
     self.timer = [NSTimer scheduledTimerWithTimeInterval:_interval target:self selector:@selector(parseTrackInfo) userInfo:nil repeats:YES];
 }
 
@@ -37,7 +38,7 @@
     NSLog(@"parser - stop");
     [self.timer invalidate];
     self.timer = nil;
-    self.previousTrackInfo = nil;
+//    self.previousTrackInfo = nil;
 }
 
 - (void)parseTrackInfo {

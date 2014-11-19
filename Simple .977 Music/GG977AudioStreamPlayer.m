@@ -309,15 +309,9 @@ static void ASReadStreamCallBack (CFReadStreamRef aStream, CFStreamEventType eve
     switch (_state) {
         case ASP_INITIALIZED:
             strState = @"AS_INITIALIZED";
-//            if ([self.delegate respondsToSelector:@selector(playerDidPrepareForPlayback:)] && _errorCode == ASP_NO_ERROR) {
-//                [self.delegate playerDidPrepareForPlayback:self];
-//            }
             break;
         case ASP_STARTING_FILE_THREAD:
             strState = @"AS_STARTING_FILE_THREAD";
-//            if ([self.delegate respondsToSelector:@selector(playerBeginConnection:)]) {
-//                [self.delegate playerBeginConnection:self];
-//            }
             break;
         case ASP_WAITING_FOR_DATA:
             strState = @"AS_WAITING_FOR_DATA";
@@ -471,7 +465,6 @@ static void ASReadStreamCallBack (CFReadStreamRef aStream, CFStreamEventType eve
 }
 
 - (void)pause {
-    NSLog(@"pause");
     @synchronized(self)
     {
         if (_state == ASP_PLAYING || _state == ASP_STOPPING)
@@ -702,7 +695,6 @@ static void ASReadStreamCallBack (CFReadStreamRef aStream, CFStreamEventType eve
  */
 - (BOOL)openReadStream
 {
-//    NSLog(@"openReadStream");
     @synchronized(self)
     {
         NSAssert([[NSThread currentThread] isEqual:_internalThread],
@@ -774,7 +766,6 @@ static void ASReadStreamCallBack (CFReadStreamRef aStream, CFStreamEventType eve
 #pragma mark - NSNotificationCenter handlers
 
 - (void)handleInterruptionChangeToState:(NSNotification *)notification {
-    NSLog(@"handleInterruptionChangeToState");
     AudioQueuePropertyID inInterruptionState =
                 (AudioQueuePropertyID) [notification.object unsignedIntValue];
     if (inInterruptionState == kAudioSessionBeginInterruption)
@@ -1337,7 +1328,6 @@ static void ASReadStreamCallBack (CFReadStreamRef aStream, CFStreamEventType eve
 
 - (void)parser:(GG977MetadataParser *)parser didParseNewTrackInfo:(GG977TrackInfo *)trackInfo {
     //  проверка состояния на тот редкий случай, когда плеер остановлен немного позже чем получены метаданные
-    NSLog(@"player - didParseNewTrackInfo:");
     if ([self.delegate respondsToSelector:@selector(player:didReceiveTrackInfo:)] &&
         ![self isFinishing] && ![self isIdle]) {
         [self.delegate player:self didReceiveTrackInfo:trackInfo];

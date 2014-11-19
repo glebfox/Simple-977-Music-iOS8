@@ -13,6 +13,14 @@
 #import "GG977TrackInfo.h"
 #import "GG977DetailTrackInfoViewController.h"
 
+typedef enum {
+    
+    NO_METADATA = 0,
+    GETTING_METADATA,
+    EMPTY_METADATA,
+    METADATA_READY
+} MetadataState;
+
 @interface GG977PlayerViewController ()
 
 @property (strong, nonatomic) GG977AudioStreamPlayer *player;
@@ -29,7 +37,9 @@
 
 @end
 
-@implementation GG977PlayerViewController
+@implementation GG977PlayerViewController {
+    MetadataState _metadataState;
+}
 
 #pragma mark - init
 
@@ -117,20 +127,28 @@
         self.imageView.image = nil;
     }
     
+    NSMutableDictionary *songInfo = [[NSMutableDictionary alloc] init];
     if (self.trackInfo != nil) {
         self.artistInfoLabel.text = self.trackInfo.artist;
         self.trackInfoLabel.text = self.trackInfo.track;
         
-        NSMutableDictionary *songInfo = [[NSMutableDictionary alloc] init];
-        
         [songInfo setObject:self.trackInfo.track forKey:MPMediaItemPropertyTitle];
         [songInfo setObject:self.trackInfo.artist forKey:MPMediaItemPropertyArtist];
-        
-        [[MPNowPlayingInfoCenter defaultCenter] setNowPlayingInfo:songInfo];
     } else {
         self.artistInfoLabel.text = @"";
         self.trackInfoLabel.text = @"";
-        [[MPNowPlayingInfoCenter defaultCenter] setNowPlayingInfo:nil];
+        
+        [songInfo setObject:@"Simple .977 Music" forKey:MPMediaItemPropertyTitle];
+        
+        if (_metadataState == EMPTY_METADATA) {
+            [songInfo setObject:NSLocalizedString(@"No metadata", nil)
+                         forKey:MPMediaItemPropertyArtist];
+            self.trackInfoLabel.text = NSLocalizedString(@"No metadata", nil);
+        } else if (_metadataState == GETTING_METADATA) {
+            [songInfo setObject:NSLocalizedString(@"Getting metadata...", nil)
+                         forKey:MPMediaItemPropertyArtist];
+            self.trackInfoLabel.text = NSLocalizedString(@"Getting metadata...", nil);
+        }
     }
     
     if (self.player == nil) {
@@ -139,26 +157,38 @@
         self.playStopButton.enabled = YES;
         if ([self.player isIdle]) {
             self.trackInfoLabel.text = NSLocalizedString(@"Press play button to listen", nil);
+            [songInfo setObject:NSLocalizedString(@"Press play button to listen", nil) forKey:MPMediaItemPropertyArtist];
         } else if ([self.player isWaiting]) {
             self.trackInfoLabel.text = NSLocalizedString(@"Connecting...", nil);
+            [songInfo setObject:NSLocalizedString(@"Connecting...", nil) forKey:MPMediaItemPropertyArtist];
         }
     }
+    [[MPNowPlayingInfoCenter defaultCenter] setNowPlayingInfo:songInfo];
     
     [self syncPlayPauseButton];
+}
+
+#pragma mark -
+
+- (void)setTrackInfo:(GG977TrackInfo *)trackInfo {
+    if (trackInfo == nil) {
+        _metadataState = NO_METADATA;
+    } else {
+        _metadataState = METADATA_READY;
+    }
+    
+    _trackInfo = trackInfo;
 }
 
 #pragma mark - Button Action Methods
 
 - (IBAction)playPause:(id)sender
 {
-    self.trackInfo = nil;
     if ([self playerShouldBeStopped]) {
         [self stop];
     } else {
         [self start];
     }
-    
-    [self updateUIState];
 }
 
 - (void)start {
@@ -166,16 +196,31 @@
                                              selector:@selector(handleAudioSessionInterruption:)
                                                  name:AVAudioSessionInterruptionNotification
                                                object:[AVAudioSession sharedInstance]];
-    
+
+    [[NSNotificationCenter defaultCenter] addObserver:self
+                                             selector:@selector(handleAudioSessionRouteChange:)
+                                                 name:AVAudioSessionRouteChangeNotification
+                                               object:[AVAudioSession sharedInstance]];
+    self.trackInfo = nil;
     [self.player start];
+    [self updateUIState];
 }
 
 - (void)stop {
-    [self.player stop];
+    if ([self playerShouldBeStopped])
+        [self.player stop];
+    
+    self.trackInfo = nil;
+    [self updateUIState];
     
     [[NSNotificationCenter defaultCenter] removeObserver:self
                                                     name:AVAudioSessionInterruptionNotification
                                                   object:[AVAudioSession sharedInstance]];
+    
+    [[NSNotificationCenter defaultCenter] removeObserver:self
+                                                    name:AVAudioSessionRouteChangeNotification
+                                                  object:[AVAudioSession sharedInstance]];
+
 
 }
 
@@ -186,6 +231,7 @@
     self.player = nil;
     self.trackInfo = nil;
     
+    [self stop];
     [self updateUIState];
     
     // Если UIAlertController существует, значит версия >= iOS8
@@ -216,7 +262,8 @@
 }
 
 - (void)playerDidStartReceivingTrackInfo:(GG977AudioStreamPlayer *)player {
-        self.trackInfoLabel.text = NSLocalizedString(@"Getting metadata...", nil);
+    _metadataState = GETTING_METADATA;
+    [self updateUIState];
 }
 
 - (void)player:(GG977AudioStreamPlayer *)player didReceiveTrackInfo:(GG977TrackInfo *)info {
@@ -235,8 +282,8 @@
             [self.spinner stopAnimating];
         }];
     } else {
+        _metadataState = EMPTY_METADATA;
         [self updateUIState];
-        self.trackInfoLabel.text = NSLocalizedString(@"No metadata", nil);
         [self.spinner stopAnimating];
     }
 }
@@ -244,7 +291,6 @@
 #pragma mark - AppRemoteControlDelegate
 
 - (void)applicationReceivedRemoteControlWithEvent:(UIEvent *)receivedEvent {
-    //    NSLog(@"player - remoteControlReceivedWithEvent");
     if (receivedEvent.type == UIEventTypeRemoteControl) {
         switch (receivedEvent.subtype) {
             case UIEventSubtypeRemoteControlPlay:
@@ -265,13 +311,21 @@
 {
     NSNumber *interruptionType = [[notification userInfo] objectForKey:AVAudioSessionInterruptionTypeKey];
     if (interruptionType.unsignedIntegerValue == AVAudioSessionInterruptionTypeBegan) {
-        NSLog(@"AVAudioSessionInterruptionTypeBegan");
-        if ([self playerShouldBeStopped]) {
-            NSLog(@"playerShouldBeStopped");
+        [self stop];
+    }
+}
+
+- (void)handleAudioSessionRouteChange:(NSNotification*) notification {
+    NSDictionary *interuptionDict = notification.userInfo;
+    
+    NSInteger routeChangeReason = [[interuptionDict valueForKey:AVAudioSessionRouteChangeReasonKey] integerValue];
+    
+    if (routeChangeReason == AVAudioSessionRouteChangeReasonOldDeviceUnavailable) {
+        AVAudioSessionRouteDescription *prevKey =
+            interuptionDict[AVAudioSessionRouteChangePreviousRouteKey];
+        AVAudioSessionPortDescription *description = prevKey.outputs.lastObject;
+        if ([description.portName isEqualToString:@"Headphones"])
             [self stop];
-        }
-        self.trackInfo = nil;
-        [self updateUIState];
     }
 }
 
@@ -281,6 +335,7 @@
 - (void)prepareForSegue:(UIStoryboardSegue *)segue sender:(id)sender
 {
     if ([[segue identifier] isEqualToString:@"ShowTrackDetail"]) {
+#warning добавить проверки
         UINavigationController *navController = (UINavigationController *)segue.destinationViewController;
         GG977DetailTrackInfoViewController *controller = (GG977DetailTrackInfoViewController *)navController.topViewController;
         controller.trackInfo = self.trackInfo;
