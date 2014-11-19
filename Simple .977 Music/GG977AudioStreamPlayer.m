@@ -278,8 +278,6 @@ static void ASReadStreamCallBack (CFReadStreamRef aStream, CFStreamEventType eve
     self = [super init];
     if (self != nil)
     {
-//        NSLog(@"PLAYER - INIT");
-//        NSLog(@"%@", station);
         _station = station;
         _metadataParser = [[GG977MetadataParser alloc] initWithInterval:3];
         _metadataParser.stationID = _station.externalID;
@@ -292,7 +290,6 @@ static void ASReadStreamCallBack (CFReadStreamRef aStream, CFStreamEventType eve
 
 - (void)dealloc
 {
-    NSLog(@"PLAYER - DEALLOC");
     [[NSNotificationCenter defaultCenter] removeObserver:self name:ASPAudioSessionInterruptionOccuredNotification object:nil];
     
     [self stop];
@@ -308,60 +305,32 @@ static void ASReadStreamCallBack (CFReadStreamRef aStream, CFStreamEventType eve
     NSString *strState;
     switch (_state) {
         case ASP_INITIALIZED:
-            strState = @"AS_INITIALIZED";
             break;
         case ASP_STARTING_FILE_THREAD:
-            strState = @"AS_STARTING_FILE_THREAD";
             break;
         case ASP_WAITING_FOR_DATA:
-            strState = @"AS_WAITING_FOR_DATA";
             break;
         case ASP_FLUSHING_EOF:
-            strState = @"AS_FLUSHING_EOF";
             break;
         case ASP_WAITING_FOR_QUEUE_TO_START:
-            strState = @"AS_WAITING_FOR_QUEUE_TO_START";
+            break;
+        case ASP_PLAYING:
             [self.metadataParser start];
             if ([self.delegate respondsToSelector:@selector(playerDidStartReceivingTrackInfo:)]) {
                 [self.delegate playerDidStartReceivingTrackInfo:self];
             }
             break;
-        case ASP_PLAYING:
-            strState = @"AS_PLAYING";
-//            if ([self.delegate respondsToSelector:@selector(playerDidStartPlaying:)]) {
-//                [self.delegate playerDidStartPlaying:self];
-//            }
-            break;
         case ASP_BUFFERING:
-            strState = @"AS_BUFFERING";
-//            if ([self.delegate respondsToSelector:@selector(playerBeginBuffering:)]) {
-//                [self.delegate playerBeginBuffering:self];
-//            }
             break;
         case ASP_STOPPING:
-            strState = @"AS_STOPPING";
-//            if ([self.delegate respondsToSelector:@selector(playerDidStopPlaying:)]) {
-//                [self.delegate playerDidStopPlaying:self];
-//            }
             break;
         case ASP_STOPPED:
-            strState = @"AS_STOPPED";
-//            if ([self.delegate respondsToSelector:@selector(playerDidStopPlaying:)]) {
-//                [self.delegate playerDidStopPlaying:self];
-//            }
             break;
         case ASP_PAUSED:
-            strState = @"AS_PAUSED";
-//            if ([self.delegate respondsToSelector:@selector(playerDidPausePlaying:)]) {
-//                [self.delegate playerDidPausePlaying:self];
-//            }
             break;
         default:
-            strState = @"UNKNOWN";
             break;
     }
-    
-    NSLog(@"state = %@", strState);
 }
 
 - (AudioStreamPlayerState)state
@@ -405,7 +374,6 @@ static void ASReadStreamCallBack (CFReadStreamRef aStream, CFStreamEventType eve
 */
 - (void)start
 {
-    NSLog(@"start");
     @synchronized (self)
     {
         // Если проигрывание было остановлено, то возобнавляем проигрывание
@@ -434,7 +402,6 @@ static void ASReadStreamCallBack (CFReadStreamRef aStream, CFStreamEventType eve
 
 - (void)stop
 {
-    NSLog(@"stop");
     [self.metadataParser stop];
     @synchronized(self)
     {
@@ -641,7 +608,6 @@ static void ASReadStreamCallBack (CFReadStreamRef aStream, CFStreamEventType eve
 }
 
 - (void)cleanup {
-    NSLog(@"cleanup");
     @synchronized(self)
     {
         // Очищаем stream если он все еще открыт
@@ -1243,6 +1209,7 @@ static void ASReadStreamCallBack (CFReadStreamRef aStream, CFStreamEventType eve
                         [self failWithErrorCode:ASP_AUDIO_QUEUE_START_FAILED];
                         return;
                     }
+                    self.state = ASP_PLAYING;
                 }
             }
         }

@@ -13,14 +13,6 @@
 #import "GG977TrackInfo.h"
 #import "GG977DetailTrackInfoViewController.h"
 
-typedef enum {
-    
-    NO_METADATA = 0,
-    GETTING_METADATA,
-    EMPTY_METADATA,
-    METADATA_READY
-} MetadataState;
-
 @interface GG977PlayerViewController ()
 
 @property (strong, nonatomic) GG977AudioStreamPlayer *player;
@@ -37,9 +29,7 @@ typedef enum {
 
 @end
 
-@implementation GG977PlayerViewController {
-    MetadataState _metadataState;
-}
+@implementation GG977PlayerViewController
 
 #pragma mark - init
 
@@ -139,17 +129,8 @@ typedef enum {
         self.trackInfoLabel.text = @"";
         
         [songInfo setObject:@"Simple .977 Music" forKey:MPMediaItemPropertyTitle];
-        
-        if (_metadataState == EMPTY_METADATA) {
-            [songInfo setObject:NSLocalizedString(@"No metadata", nil)
-                         forKey:MPMediaItemPropertyArtist];
-            self.trackInfoLabel.text = NSLocalizedString(@"No metadata", nil);
-        } else if (_metadataState == GETTING_METADATA) {
-            [songInfo setObject:NSLocalizedString(@"Getting metadata...", nil)
-                         forKey:MPMediaItemPropertyArtist];
-            self.trackInfoLabel.text = NSLocalizedString(@"Getting metadata...", nil);
-        }
     }
+    [[MPNowPlayingInfoCenter defaultCenter] setNowPlayingInfo:songInfo];
     
     if (self.player == nil) {
         self.playStopButton.enabled = NO;
@@ -157,27 +138,12 @@ typedef enum {
         self.playStopButton.enabled = YES;
         if ([self.player isIdle]) {
             self.trackInfoLabel.text = NSLocalizedString(@"Press play button to listen", nil);
-            [songInfo setObject:NSLocalizedString(@"Press play button to listen", nil) forKey:MPMediaItemPropertyArtist];
         } else if ([self.player isWaiting]) {
             self.trackInfoLabel.text = NSLocalizedString(@"Connecting...", nil);
-            [songInfo setObject:NSLocalizedString(@"Connecting...", nil) forKey:MPMediaItemPropertyArtist];
         }
     }
-    [[MPNowPlayingInfoCenter defaultCenter] setNowPlayingInfo:songInfo];
     
     [self syncPlayPauseButton];
-}
-
-#pragma mark -
-
-- (void)setTrackInfo:(GG977TrackInfo *)trackInfo {
-    if (trackInfo == nil) {
-        _metadataState = NO_METADATA;
-    } else {
-        _metadataState = METADATA_READY;
-    }
-    
-    _trackInfo = trackInfo;
 }
 
 #pragma mark - Button Action Methods
@@ -262,8 +228,7 @@ typedef enum {
 }
 
 - (void)playerDidStartReceivingTrackInfo:(GG977AudioStreamPlayer *)player {
-    _metadataState = GETTING_METADATA;
-    [self updateUIState];
+    self.trackInfoLabel.text = NSLocalizedString(@"Getting metadata...", nil);
 }
 
 - (void)player:(GG977AudioStreamPlayer *)player didReceiveTrackInfo:(GG977TrackInfo *)info {
@@ -282,8 +247,8 @@ typedef enum {
             [self.spinner stopAnimating];
         }];
     } else {
-        _metadataState = EMPTY_METADATA;
         [self updateUIState];
+        self.trackInfoLabel.text = NSLocalizedString(@"No metadata", nil);
         [self.spinner stopAnimating];
     }
 }
