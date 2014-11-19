@@ -34,10 +34,10 @@
 }
 
 - (void)applicationWillTerminate:(UIApplication *)application {
-        [[UIApplication sharedApplication] endReceivingRemoteControlEvents];
+    [[UIApplication sharedApplication] endReceivingRemoteControlEvents];
 }
 
-#pragma mark - 
+#pragma mark -
 
 - (void)remoteControlReceivedWithEvent:(UIEvent *)receivedEvent {
     if ([self.delegate respondsToSelector:@selector(applicationReceivedRemoteControlWithEvent:)]) {
